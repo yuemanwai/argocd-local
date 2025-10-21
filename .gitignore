@@ -1,1 +1,9 @@
-argocd-repo-secret-sample.yaml
+# Ignore all secret files
+*secret.yaml
+
+# Ignore all config files containing sensitive data
+*config.yaml
+
+# Ignore all environment variable files
+.env
+.env.*
