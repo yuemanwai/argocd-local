@@ -6,8 +6,8 @@ metadata:
   name: fyp-app-svc
 spec:
   ports:
-  - name: 8080-5000
-    port: 8080
+  - name: 80-5000
+    port: 80
     protocol: TCP
     targetPort: 5000
   selector:
