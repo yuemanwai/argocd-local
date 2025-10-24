@@ -18,6 +18,17 @@ spec:
       containers:
       - image: yuemanwai/fyp-jp:latest
         name: fyp-jp
+        environment:
+        - name: DB_HOST
+          value: "postgresdb"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_NAME
+          value: "postgres"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "postgres"
         resources:
           limits:
             cpu: "0.5"
