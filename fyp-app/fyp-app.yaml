@@ -37,5 +37,5 @@ spec:
             cpu: "0.25"
             memory: 256Mi
         ports:
-        - containerPort: 80
+        - containerPort: 5000
           protocol: TCP
