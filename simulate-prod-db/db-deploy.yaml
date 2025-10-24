@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: db
+  name: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - image: postgres:16-bookworm
+        name: postgres
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: 512Mi
+          requests:
+            cpu: "0.25"
+            memory: 256Mi
+        ports:
+        - containerPort: 5432
+          protocol: TCP

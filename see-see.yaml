@@ -1,0 +1,119 @@
+apiVersion: v1
+items:
+- apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    creationTimestamp: "2025-10-21T09:14:01Z"
+    generation: 96
+    name: test-argocd-nginx-app
+    namespace: argocd
+    resourceVersion: "25698"
+    uid: 36025d03-caea-48e4-af2b-461d1d2cd49e
+  spec:
+    destination:
+      namespace: default
+      server: https://kubernetes.default.svc
+    project: default
+    source:
+      path: manifests
+      repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+      targetRevision: HEAD
+    syncPolicy:
+      automated:
+        enabled: true
+        prune: true
+        selfHeal: true
+  status:
+    controllerNamespace: argocd
+    health:
+      lastTransitionTime: "2025-10-22T09:12:41Z"
+      status: Healthy
+    history:
+    - deployStartedAt: "2025-10-21T09:14:02Z"
+      deployedAt: "2025-10-21T09:14:02Z"
+      id: 0
+      initiatedBy:
+        automated: true
+      revision: 29b3762687903b0ebc6e2e9e1bc91d31978465e0
+      source:
+        path: manifests
+        repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+        targetRevision: HEAD
+    - deployStartedAt: "2025-10-22T08:54:32Z"
+      deployedAt: "2025-10-22T08:54:33Z"
+      id: 1
+      initiatedBy:
+        username: admin
+      revision: 29b3762687903b0ebc6e2e9e1bc91d31978465e0
+      source:
+        path: manifests
+        repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+        targetRevision: HEAD
+    operationState:
+      finishedAt: "2025-10-22T09:12:34Z"
+      message: successfully synced (all tasks run)
+      operation:
+        initiatedBy:
+          automated: true
+        retry:
+          limit: 5
+        sync:
+          autoHealAttemptsCount: 1
+          resources:
+          - group: apps
+            kind: Deployment
+            name: my-nginx
+          revision: 29b3762687903b0ebc6e2e9e1bc91d31978465e0
+      phase: Succeeded
+      startedAt: "2025-10-22T09:12:34Z"
+      syncResult:
+        resources:
+        - group: apps
+          hookPhase: Running
+          images:
+          - nginx:latest
+          kind: Deployment
+          message: deployment.apps/my-nginx created
+          name: my-nginx
+          namespace: default
+          status: Synced
+          syncPhase: Sync
+          version: v1
+        revision: 29b3762687903b0ebc6e2e9e1bc91d31978465e0
+        source:
+          path: manifests
+          repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+          targetRevision: HEAD
+    reconciledAt: "2025-10-24T02:13:27Z"
+    resourceHealthSource: appTree
+    resources:
+    - kind: Service
+      name: my-nginx-svc
+      namespace: default
+      status: Synced
+      version: v1
+    - group: apps
+      kind: Deployment
+      name: my-nginx
+      namespace: default
+      status: Synced
+      version: v1
+    sourceHydrator: {}
+    sourceType: Directory
+    summary:
+      images:
+      - nginx:latest
+    sync:
+      comparedTo:
+        destination:
+          namespace: default
+          server: https://kubernetes.default.svc
+        source:
+          path: manifests
+          repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+          targetRevision: HEAD
+      revision: 29b3762687903b0ebc6e2e9e1bc91d31978465e0
+      status: Synced
+kind: List
+metadata:
+  resourceVersion: ""
