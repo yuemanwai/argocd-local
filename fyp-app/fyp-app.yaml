@@ -18,7 +18,7 @@ spec:
       containers:
       - image: yuemanwai/fyp-jp:latest
         name: fyp-jp
-        environment:
+        env:
         - name: DB_HOST
           value: "postgresdb"
         - name: DB_PORT
