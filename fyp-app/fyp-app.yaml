@@ -40,3 +40,32 @@ spec:
         ports:
         - containerPort: 5000
           protocol: TCP
+        # Liveness Probe - 檢查應用是否存活
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Readiness Probe - 檢查應用是否就緒
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # # Startup Probe - 檢查應用啟動
+        # startupProbe:
+        #   httpGet:
+        #     path: /startup
+        #     port: 5000
+        #   initialDelaySeconds: 0
+        #   periodSeconds: 10
+        #   timeoutSeconds: 3
+        #   failureThreshold: 30
