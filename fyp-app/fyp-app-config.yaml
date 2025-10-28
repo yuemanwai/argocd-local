@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: fyp-app-config
   namespace: default
-stringData:
+Data:
   # Database configuration
   DB_HOST: "db-svc.default.svc.cluster.local"
   DB_PORT: "5432"
