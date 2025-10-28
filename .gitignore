@@ -1,9 +1,10 @@
 # Ignore all secret files
-*secret.yaml
-*secret*
+# *secret.yaml
+# *secret*
+*repo-secret.yaml
 
 # Ignore all config files containing sensitive data
-*config.yaml
+# *config.yaml
 
 # Ignore all environment variable files
 .env

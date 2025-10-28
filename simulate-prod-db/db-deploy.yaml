@@ -21,15 +21,8 @@ spec:
         envFrom:
         - secretRef:
             name: db-secret
-        # - configMapRef:
-        #     name: config # 引用 ConfigMap
-        # env:
-        # - name: POSTGRES_USER
-        #   value: postgres
-        # - name: POSTGRES_DB
-        #   value: postgres
-        # - name: POSTGRES_PASSWORD
-        #   value: postgres
+        - configMapRef:
+            name: db-config
         resources:
           requests:
             cpu: "0.25"
