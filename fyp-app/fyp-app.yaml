@@ -19,6 +19,7 @@ spec:
       containers:
       - image: yuemanwai/fyp-jp:latest
         name: fyp-jp
+        imagePullPolicy: Always
         env:
         - name: DB_HOST
           value: "db-svc.default.svc.cluster.local"
