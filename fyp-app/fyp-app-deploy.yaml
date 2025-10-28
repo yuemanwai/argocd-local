@@ -21,17 +21,22 @@ spec:
         name: fyp-jp
         # always pull the latest image (for development only)
         imagePullPolicy: Always
-        env:
-        - name: DB_HOST
-          value: "db-svc.default.svc.cluster.local"
-        - name: DB_PORT
-          value: "5432"
-        - name: DB_NAME
-          value: "postgres"
-        - name: DB_USER
-          value: "postgres"
-        - name: DB_PASSWORD
-          value: "postgres"
+        envFrom:
+        - secretRef:
+            name: fyp-app-secret
+        - configMapRef:
+            name: fyp-app-config
+        # env:
+        # - name: DB_HOST
+        #   value: "db-svc.default.svc.cluster.local"
+        # - name: DB_PORT
+        #   value: "5432"
+        # - name: DB_NAME
+        #   value: "postgres"
+        # - name: DB_USER
+        #   value: "postgres"
+        # - name: DB_PASSWORD
+        #   value: "postgres"
         resources:
           requests:
             cpu: "0.1"
