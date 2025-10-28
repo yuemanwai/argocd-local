@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fyp-app-config
+  namespace: default
+stringData:
+  # Database configuration
+  DB_HOST: "db-svc.default.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_NAME: "postgres"
+  SQLALCHEMY_TRACK_MODIFICATIONS: "false"
+  SESSION_SQLALCHEMY_TABLE: "flask_sessions_data"
+
+  # Mail server configuration
+  MAIL_SERVER: "mailhog"
+  MAIL_PORT: "1025"
+  MAIL_USE_TLS: "true"
+
+  # other configurations
+  ADMINS: ['admin@example.com']
+  POSTS_PER_PAGE: "10"
+  LANGUAGES: ['en', 'es', 'zh']
