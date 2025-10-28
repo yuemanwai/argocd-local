@@ -19,6 +19,7 @@ spec:
       containers:
       - image: yuemanwai/fyp-jp:latest
         name: fyp-jp
+        # always pull the latest image (for development only)
         imagePullPolicy: Always
         env:
         - name: DB_HOST
