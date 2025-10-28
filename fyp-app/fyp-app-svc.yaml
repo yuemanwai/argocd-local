@@ -4,6 +4,7 @@ metadata:
   labels:
     app: fyp-app
   name: fyp-app-svc
+  namespace: default
 spec:
   ports:
   - name: 80-5000

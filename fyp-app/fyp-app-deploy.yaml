@@ -4,6 +4,7 @@ metadata:
   labels:
     app: fyp-app
   name: fyp-app
+  namespace: default
 spec:
   revisionHistoryLimit: 3
   replicas: 1
