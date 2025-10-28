@@ -7,3 +7,6 @@
 # Ignore all environment variable files
 .env
 .env.*
+
+# Ignore local development files
+cmd.md
