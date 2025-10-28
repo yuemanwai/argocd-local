@@ -1,5 +1,6 @@
 # Ignore all secret files
 *secret.yaml
+*secret*
 
 # Ignore all config files containing sensitive data
 *config.yaml
