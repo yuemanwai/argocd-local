@@ -3,5 +3,5 @@ kind: ConfigMap
 metadata:
   name: db-config
   namespace: default
-Data:
+data:
   POSTGRES_DB: "postgres"

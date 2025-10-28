@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   name: fyp-app-config
   namespace: default
-Data:
+data:
   # Database configuration
   DB_HOST: "db-svc.default.svc.cluster.local"
   DB_PORT: "5432"
@@ -17,6 +17,6 @@ Data:
   MAIL_USE_TLS: "true"
 
   # other configurations
-  ADMINS: ['admin@example.com']
+  ADMINS: "admin@example.com"
   POSTS_PER_PAGE: "10"
-  LANGUAGES: ['en', 'es', 'zh']
+  LANGUAGES: "en, es, zh"
