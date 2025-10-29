@@ -36,10 +36,10 @@ spec:
         resources:
           requests:
             cpu: "0.1"
-            memory: 256Mi
+            memory: 300Mi
           limits:
             cpu: "0.5"
-            memory: 512Mi
+            memory: 600Mi
         ports:
         - containerPort: 5000
           protocol: TCP
@@ -48,8 +48,8 @@ spec:
           httpGet:
             path: /healthz
             port: 5000
-          initialDelaySeconds: 60
-          periodSeconds: 60
+          initialDelaySeconds: 90
+          periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 3
         
@@ -58,8 +58,8 @@ spec:
           httpGet:
             path: /readyz
             port: 5000
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 45
+          periodSeconds: 15
           timeoutSeconds: 3
           failureThreshold: 3
         
