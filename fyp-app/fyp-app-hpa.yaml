@@ -11,12 +11,12 @@ spec:
     kind: Deployment
     name: fyp-app
   metrics:
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 70
+  # - type: Resource
+  #   resource:
+  #     name: memory
+  #     target:
+  #       type: Utilization
+  #       averageUtilization: 70
   - type: Resource
     resource:
       name: cpu
