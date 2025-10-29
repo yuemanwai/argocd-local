@@ -5,6 +5,12 @@ metadata:
     app: fyp-app
   name: fyp-app
   namespace: default
+  annotations:
+    argocd.argoproj.io/ignore-differences: |
+      - group: apps
+        kind: Deployment
+        jsonPointers:
+        - /spec/replicas
 spec:
   revisionHistoryLimit: 3
   replicas: 1
