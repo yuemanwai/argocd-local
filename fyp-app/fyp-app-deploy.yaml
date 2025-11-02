@@ -36,10 +36,10 @@ spec:
         resources:
           requests:
             cpu: "0.1"
-            memory: 300Mi
+            memory: 512Mi
           limits:
             cpu: "0.5"
-            memory: 600Mi
+            memory: 1024Mi
         ports:
         - containerPort: 5000
           protocol: TCP
