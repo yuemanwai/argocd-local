@@ -8,7 +8,7 @@ spec:
   source:
     chart: kube-prometheus-stack
     repoURL: https://prometheus-community.github.io/helm-charts
-    targetRevision: 45.0.0       # 指定 Helm chart 版本，或用 latest
+    targetRevision: latest       # 指定 Helm chart 版本，或用 latest
     helm:
       releaseName: monitoring     # Helm release 名稱
   destination:
