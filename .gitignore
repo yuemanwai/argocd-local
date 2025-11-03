@@ -12,3 +12,6 @@
 
 # Ignore local development files
 cmd.md
+
+
+*.failed
