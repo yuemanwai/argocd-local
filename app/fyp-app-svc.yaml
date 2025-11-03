@@ -2,8 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: fyp-app
-  name: fyp-app-svc
+    app: app
+  name: app-svc
   namespace: default
 spec:
   ports:
@@ -12,6 +12,6 @@ spec:
     protocol: TCP
     targetPort: 5000
   selector:
-    app: fyp-app
+    app: app
   type: NodePort
 

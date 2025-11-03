@@ -2,8 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: fyp-app
-  name: fyp-app
+    app: app
+  name: app
   namespace: default
   annotations:
     argocd.argoproj.io/ignore-differences: |
@@ -16,23 +16,23 @@ spec:
   # replicas: 1
   selector:
     matchLabels:
-      app: fyp-app
+      app: app
   strategy: {}
   template:
     metadata:
       labels:
-        app: fyp-app
+        app: app
     spec:
       containers:
       - image: yuemanwai/fyp-jp:latest
-        name: fyp-jp
+        name: app
         # always pull the latest image (for development only)
         imagePullPolicy: Always
         envFrom:
         - secretRef:
-            name: fyp-app-secret
+            name: app-secret
         - configMapRef:
-            name: fyp-app-config
+            name: app-config
         resources:
           requests:
             cpu: "0.1"
