@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     path: simulate-prod-db
-    repoURL: https://github.com/yuemanwai/jp-academy-k8s-manifest.git
+    repoURL: https://github.com/yuemanwai/k8s-manifest.git
     targetRevision: HEAD
   syncPolicy:
     automated:
