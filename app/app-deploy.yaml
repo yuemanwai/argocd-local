@@ -24,7 +24,7 @@ spec:
         app: app
     spec:
       containers:
-      - image: yuemanwai/fyp-jp:latest
+      - image: nginx:latest
         name: app
         # always pull the latest image (for development only)
         imagePullPolicy: Always
