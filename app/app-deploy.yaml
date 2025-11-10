@@ -4,7 +4,7 @@ metadata:
   labels:
     app: app
   name: app
-  namespace: default
+  namespace: my-gitops-demo
   annotations:
     argocd.argoproj.io/ignore-differences: |
       - group: apps

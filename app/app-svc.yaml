@@ -4,7 +4,7 @@ metadata:
   labels:
     app: app
   name: app-svc
-  namespace: default
+  namespace: my-gitops-demo
 spec:
   ports:
   - name: 80-5000
