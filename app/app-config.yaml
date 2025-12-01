@@ -5,7 +5,7 @@ metadata:
   namespace: default
 data:
   # Database configuration
-  DB_HOST: "db-svc.my-gitops-demo.svc.cluster.local"
+  DB_HOST: "db-svc.default.svc.cluster.local"
   DB_PORT: "5432"
   DB_NAME: "postgres"
   SQLALCHEMY_TRACK_MODIFICATIONS: "false"
