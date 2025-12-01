@@ -4,7 +4,7 @@ metadata:
   labels:
     app: app
   name: app
-  namespace: my-gitops-demo
+  namespace: default
   annotations:
     argocd.argoproj.io/ignore-differences: |
       - group: apps
@@ -24,7 +24,7 @@ spec:
         app: app
     spec:
       containers:
-      - image: registry.access.redhat.com/ubi8/nginx-118:latest
+      - image: docker.io/yuemanwai/fyp-jp:latest
         name: app
         # always pull the latest image (for development only)
         imagePullPolicy: Always
