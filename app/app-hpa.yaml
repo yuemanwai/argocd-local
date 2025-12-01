@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: app-hpa
-  namespace: my-gitops-demo
+  namespace: default
 spec:
   maxReplicas: 5
   minReplicas: 1
