@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
-  namespace: my-gitops-demo
+  namespace: default
 data:
   # Database configuration
   DB_HOST: "db-svc.my-gitops-demo.svc.cluster.local"
