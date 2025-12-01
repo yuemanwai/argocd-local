@@ -4,7 +4,7 @@ metadata:
   labels:
     app: db
   name: db
-  namespace: my-gitops-demo
+  namespace: default
 spec:
   revisionHistoryLimit: 3
   replicas: 1
