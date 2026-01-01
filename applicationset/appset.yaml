@@ -20,7 +20,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/yuemanwai/k8s-manifest.git
+        repoURL: https://github.com/yuemanwai/argocd-local.git
         targetRevision: HEAD
         path: '{{path}}'
       destination:
