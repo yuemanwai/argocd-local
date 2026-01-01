@@ -1,12 +1,12 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app: db
   name: db
   namespace: default
 spec:
-  revisionHistoryLimit: 3
+  serviceName: "db-svc"
   replicas: 1
   selector:
     matchLabels:
@@ -34,3 +34,14 @@ spec:
         ports:
         - containerPort: 5432
           protocol: TCP
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

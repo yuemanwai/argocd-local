@@ -7,11 +7,12 @@ metadata:
   namespace: default
 spec:
   ports:
-  - name: 5432-5432
+  - name: postgres
     port: 5432
     protocol: TCP
     targetPort: 5432
   selector:
     app: db
   type: ClusterIP
+  clusterIP: None
 
