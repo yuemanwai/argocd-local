@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  namespace: default
+  annotations:
+    # 這裡不需要 SSL Passthrough，因為你的 Flask App 通常是用 HTTP
+    # Nginx 會負責接收流量轉發給 Flask
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: myapp.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: app-svc  # 指向你的 Service 名
+            port:
+              number: 80   # 指向 Service 的 Port (不是 targetPort)
