@@ -13,7 +13,7 @@ metadata:
         - /spec/replicas
 spec:
   revisionHistoryLimit: 3
-  # replicas: 1
+  # replicas: 1       # Managed by HPA
   selector:
     matchLabels:
       app: app

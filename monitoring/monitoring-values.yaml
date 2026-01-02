@@ -1,0 +1,51 @@
+# local-values.yaml - 專為 Notebook 而設的貧窮版監控
+
+# 1. 關閉 Alertmanager (你自己做 Lab 唔洗發 Alert Email，慳好多 RAM)
+alertmanager:
+  enabled: false
+
+# 2. 將 Grafana 變輕
+grafana:
+  enabled: true
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi # 限制佢最多食 256MB
+    requests:
+      cpu: 50m
+      memory: 100Mi
+  # 關閉 Sidecar (用黎自動搵 Dashboard 嘅，慳資源可以熄左佢，手動 import 都得)
+  sidecar:
+    dashboards:
+      enabled: false
+
+# 3. 大幅閹割 Prometheus
+prometheus:
+  prometheusSpec:
+    # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
+    storageSpec: 
+      emptyDir:
+        medium: Memory
+    # 數據只留 6 個鐘 (Default 係 10 日！你的 Notebook 硬碟會多謝你)
+    retention: 6h 
+    
+    # 限制資源
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi # 限制 Prometheus 最多食 512MB
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+# 4. 關閉一堆你暫時用唔著嘅 K8s 元件監控 (慳資源)
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+coreDns:
+  enabled: false
+kubeProxy:
+  enabled: false
