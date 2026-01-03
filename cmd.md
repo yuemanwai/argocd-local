@@ -67,7 +67,13 @@ helm repo update
 helm install monitoring prometheus-community/kube-prometheus-stack \
     --namespace monitoring \
     --create-namespace \
-    -f ./monitoring/monitoring-values.yaml
+    -f ./infra/monitoring/monitoring-values.yaml
+
+# upgrade monitoring via helm (永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛)
+helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
+  --namespace monitoring \
+  --values ./infra/monitoring/monitoring-values.yaml \
+  --atomic
 
 ## wait a few minute
 kubectl get all -n monitoring
@@ -85,7 +91,7 @@ kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 909
 helm delete monitoring -n monitoring
 
 # get current values
-helm get values monitoring -n monitoring > ./monitoring/current-values.yaml
+helm get values monitoring -n monitoring > ./infra/monitoring/current-values.yaml
 
 # ----------------------------------------------------------
 

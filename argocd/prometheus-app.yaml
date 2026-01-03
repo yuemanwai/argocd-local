@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+  # 加上 Finalizer 確保刪除 App 時會連埋 D 資源一齊刪
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  
+  # --- 關鍵：多重來源 (Multiple Sources) ---
+  sources:
+    # 來源 1: 官方 Helm Chart
+    - repoURL: https://prometheus-community.github.io/helm-charts
+      chart: kube-prometheus-stack
+      targetRevision: 68.4.4  # 建議鎖定版本，唔好用 latest
+      helm:
+        # 這裡參照下面定義既 "argocd-local"
+        valueFiles:
+          - $argocd-local/infra/monitoring/values.yaml
+
+    # 來源 2: 你既 Github Repo (存放 values.yaml)
+    - repoURL: https://github.com/yuemanwai/argocd-local.git
+      targetRevision: HEAD
+      ref: argocd-local  # 比個名佢，等上面可以用 $argocd-local 黎引用
+
+  # --- 部署目標 ---
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  # --- 同步策略 ---
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # 非常重要！解決 CRD 太大導致 Apply 失敗的問題
+      - ServerSideApply=true

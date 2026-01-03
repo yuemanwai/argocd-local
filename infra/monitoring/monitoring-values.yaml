@@ -9,15 +9,23 @@ grafana:
   enabled: true
   resources:
     limits:
-      cpu: 200m
-      memory: 256Mi # 限制佢最多食 256MB
+      cpu: 300m
+      memory: 512Mi # 限制佢最多食 512MB
     requests:
-      cpu: 50m
-      memory: 100Mi
+      cpu: 100m
+      memory: 256Mi
   # 關閉 Sidecar (用黎自動搵 Dashboard 嘅，慳資源可以熄左佢，手動 import 都得)
   sidecar:
     dashboards:
-      enabled: false
+      enabled: true
+      label: grafana_dashboard
+      resources:
+        limits:
+          memory: 512Mi
+          cpu: 100m
+        requests:
+          memory: 256Mi
+          cpu: 50m
 
 # 3. 大幅閹割 Prometheus
 prometheus:
