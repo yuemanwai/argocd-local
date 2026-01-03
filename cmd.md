@@ -48,8 +48,7 @@ k delete -f applicationset/
 # Kill all background port-forward processes
 kill $(jobs -p)
 
-# check prometheus label value for integrate with other services
-kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
+
 
 # ----------------------------------------------------------
 
@@ -84,6 +83,11 @@ helm delete monitoring -n monitoring
 
 # get current values
 helm get values monitoring -n monitoring > ./monitoring/current-values.yaml
+
+# ----------------------------------------------------------
+
+# check prometheus label value for integrate with other services
+kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
 
 # ----------------------------------------------------------
 
