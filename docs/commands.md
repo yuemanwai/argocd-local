@@ -15,20 +15,20 @@ helm repo update
 helm install argocd argo/argo-cd \
     --namespace argocd \
     --create-namespace \
-    --values ./argocd/argocd-lite-values.yaml \
+    --values ./infrastructure/argocd/values.yaml \
     --version 5.51.6
 
 # upgrade argocd via helm (永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛)
 helm upgrade --install argocd argo/argo-cd \
   --namespace argocd \
-  --values ./argocd/argocd-lite-values.yaml \
+  --values ./argocd/values.yaml \
   --atomic
 
 ## uninstall argocd
 helm uninstall argocd -n argocd
   
 # setup argocd
-k apply -f applicationset/
+k apply -f bootstrap/ -R
 
 # access argocd webui
 k port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
@@ -36,22 +36,21 @@ k port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
 # get pw for argocd admin
 k get secret/argocd-initial-admin-secret -n argocd -o jsonpath={.data.password} | base64 -d
 
-# access fyp website
-k port-forward service/app-svc 8080:80 > /dev/null 2>&1 &
-
 # Check CPU and memory usage of pods
 k top pod
 
 # Cleanup argocd applications
-k delete -f applicationset/
+k delete -f bootstrap/ -R
 
 # Kill all background port-forward processes
 kill $(jobs -p)
 
-
-
 # ----------------------------------------------------------
 
+# access fyp website
+k port-forward service/app-svc 8080:80 > /dev/null 2>&1 &
+
+# ----------------------------------------------------------
 # kubernetes-dashboard
 k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /dev/null 2>&1 &
 
@@ -59,39 +58,17 @@ k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /d
 
 # kube-prometheus-stack
 
-## add prometheus-community repo
-helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo update
-
-## install stable version (first installation)
-helm install monitoring prometheus-community/kube-prometheus-stack \
-    --namespace monitoring \
-    --create-namespace \
-    -f ./infra/monitoring/monitoring-values.yaml
-
-# upgrade monitoring via helm (永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛)
-helm upgrade --install monitoring prometheus-community/kube-prometheus-stack \
-  --namespace monitoring \
-  --values ./infra/monitoring/monitoring-values.yaml \
-  --atomic
-
-## wait a few minute
-kubectl get all -n monitoring
-
 ## get grafana admin pw
 kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
 
-## forward port 3000
+## forward grafana port 3000
 kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
 
 # forward prometheus port
 kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 & 
 
-## delete monitoring
-helm delete monitoring -n monitoring
-
 # get current values
-helm get values monitoring -n monitoring > ./infra/monitoring/current-values.yaml
+helm get values monitoring -n monitoring > ./infrastructure/monitoring/current-values.yaml
 
 # ----------------------------------------------------------
 

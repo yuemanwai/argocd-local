@@ -8,10 +8,10 @@ spec:
   - list:
       elements:
       - name: app
-        path: app
+        path: workloads/app
         namespace: default
       - name: db
-        path: db
+        path: workloads/db
         namespace: default
   template:
     metadata:
