@@ -1,24 +1,3 @@
-# 1. 停止並卸載 k3s
-sudo systemctl stop k3s
-sudo /usr/local/bin/k3s-uninstall.sh
-
-# 2. 清理殘留 (可選，徹底)
-sudo rm -rf /var/lib/rancher /etc/rancher /var/lib/cni /etc/cni
-
-# 3. 重裝 k3s (啟用 metrics-server)
-curl -sfL https://get.k3s.io | sh -
-
-# 4. 啟動
-sudo systemctl start k3s
-sudo systemctl enable k3s
-
-# 4. 授權及驗證
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
-sudo chown $(id -u):$(id -g) ~/.kube/config
-export KUBECONFIG=~/.kube/config
-kubectl get nodes
-
-# ----------------------------------------------------------
 
 # Alternative: Use minikube instead of k3s
 minikube start --memory 8192 --cpus 6 --addons=metrics-server
@@ -28,10 +7,26 @@ docker stats
 
 # ----------------------------------------------------------
 
-# install argocd
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# argocd via helm (alternative to kubectl apply)
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
 
+# Lock version to avoid unwanted upgrades
+helm install argocd argo/argo-cd \
+    --namespace argocd \
+    --create-namespace \
+    --values ./argocd/argocd-lite-values.yaml \
+    --version 5.51.6
+
+# upgrade argocd via helm (永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛)
+helm upgrade --install argocd argo/argo-cd \
+  --namespace argocd \
+  --values ./argocd/argocd-lite-values.yaml \
+  --atomic
+
+## uninstall argocd
+helm uninstall argocd -n argocd
+  
 # setup argocd
 k apply -f applicationset/
 
@@ -53,6 +48,9 @@ k delete -f applicationset/
 # Kill all background port-forward processes
 kill $(jobs -p)
 
+# check prometheus label value for integrate with other services
+kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
+
 # ----------------------------------------------------------
 
 # kubernetes-dashboard
@@ -64,27 +62,33 @@ k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /d
 
 ## add prometheus-community repo
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-
-## update list
 helm repo update
 
-## create namespace
-kubectl create namespace monitoring
-
 ## install stable version (first installation)
-helm install monitoring prometheus-community/kube-prometheus-stack -n monitoring --create-namespace -f ./monitoring/monitoring-values.yaml
+helm install monitoring prometheus-community/kube-prometheus-stack \
+    --namespace monitoring \
+    --create-namespace \
+    -f ./monitoring/monitoring-values.yaml
 
 ## wait a few minute
 kubectl get all -n monitoring
 
 ## get grafana admin pw
-kubectl get secret prometheus-stack-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
+kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
 
 ## forward port 3000
-kubectl port-forward svc/prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
+kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
 
-## delete prometheus-stack
-helm delete prometheus-stack -n monitoring
+## delete monitoring
+helm delete monitoring -n monitoring
 
 # get current values
 helm get values monitoring -n monitoring > ./monitoring/current-values.yaml
+
+# ----------------------------------------------------------
+
+# grafana dashboard
+
+## dashboard for argocd
+https://argo-cd.readthedocs.io/en/release-1.8/operator-manual/metrics/#dashboards
+https://github.com/argoproj/argo-cd/blob/master/examples/dashboard.json
