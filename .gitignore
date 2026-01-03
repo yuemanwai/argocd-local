@@ -10,8 +10,5 @@
 .env
 .env.*
 
-# Ignore local development files
-cmd.md
-
-
+# Ignore all log files
 *.failed
