@@ -18,7 +18,7 @@ spec:
       helm:
         # 這裡參照下面定義既 "argocd-local"
         valueFiles:
-          - $argocd-local/infra/monitoring/values.yaml
+          - $argocd-local/infrastructure/monitoring/values.yaml
 
     # 來源 2: 你既 Github Repo (存放 values.yaml)
     - repoURL: https://github.com/yuemanwai/argocd-local.git
