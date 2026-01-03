@@ -78,6 +78,9 @@ kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-pa
 ## forward port 3000
 kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
 
+# forward prometheus port
+kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 & 
+
 ## delete monitoring
 helm delete monitoring -n monitoring
 
