@@ -23,51 +23,49 @@ spec:
         app: app
     spec:
       containers:
-      - image: docker.io/yuemanwai/fyp-jp:latest
-        name: app
-        # always pull the latest image (for development only)
-        imagePullPolicy: Always
-        envFrom:
-        - secretRef:
-            name: app-secret
-        - configMapRef:
-            name: app-config
-        resources:
-          requests:
-            cpu: "0.1"
-            memory: 512Mi
-          limits:
-            cpu: "0.5"
-            memory: 1024Mi
-        ports:
-        - containerPort: 5000
-          protocol: TCP
-        # Liveness Probe - 檢查應用是否存活
-        livenessProbe:
-          httpGet:
-            path: /healthz
-            port: 5000
-          initialDelaySeconds: 90
-          periodSeconds: 30
-          timeoutSeconds: 5
-          failureThreshold: 3
-        
-        # Readiness Probe - 檢查應用是否就緒
-        readinessProbe:
-          httpGet:
-            path: /readyz
-            port: 5000
-          initialDelaySeconds: 45
-          periodSeconds: 15
-          timeoutSeconds: 3
-          failureThreshold: 3
-        
-        # # Startup Probe - 檢查應用啟動
-        # startupProbe:
-        #   httpGet:
-        #     path: /startup
-        #     port: 5000
-        #   initialDelaySeconds: 0
-        #   periodSeconds: 10
-        #   timeoutSeconds: 3
-        #   failureThreshold: 30
+        - image: docker.io/yuemanwai/fyp-jp:4857908
+          name: app
+          # always pull the latest image (for development only)
+          imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: app-secret
+            - configMapRef:
+                name: app-config
+          resources:
+            requests:
+              cpu: "0.1"
+              memory: 512Mi
+            limits:
+              cpu: "0.5"
+              memory: 1024Mi
+          ports:
+            - containerPort: 5000
+              protocol: TCP
+          # Liveness Probe - 檢查應用是否存活
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 90
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          # Readiness Probe - 檢查應用是否就緒
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 5000
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 3
+            failureThreshold: 3
+# # Startup Probe - 檢查應用啟動
+# startupProbe:
+#   httpGet:
+#     path: /startup
+#     port: 5000
+#   initialDelaySeconds: 0
+#   periodSeconds: 10
+#   timeoutSeconds: 3
+#   failureThreshold: 30
