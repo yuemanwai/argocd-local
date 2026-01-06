@@ -1,0 +1,9 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: app-pdb
+spec:
+  minAvailable: 1  # 無論點樣排，都要保證至少有 1 隻 Pod 係度做野
+  selector:
+    matchLabels:
+      app: app
