@@ -20,3 +20,7 @@ data:
   ADMINS: "admin@example.com"
   POSTS_PER_PAGE: "10"
   LANGUAGES: "en, es, zh"
+
+  # Logging configuration
+  LOG_TO_STDOUT: "true"
+  LOG_LEVEL: "INFO"

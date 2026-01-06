@@ -47,10 +47,21 @@ kill $(jobs -p)
 
 # ----------------------------------------------------------
 
+# display all available helm values for argo-cd chart
+helm show values argo-cd --repo https://argoproj.github.io/argo-helm > values.yaml
+
+# check all helm releases across namespaces
+helm list -A
+helm get values argocd -n argocd > current-values.yaml
+helm get values argocd -n argocd --all > all-values.yaml
+
+# ----------------------------------------------------------
+
 # access fyp website
 k port-forward service/app-svc 8080:80 > /dev/null 2>&1 &
 
 # ----------------------------------------------------------
+
 # kubernetes-dashboard
 k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /dev/null 2>&1 &
 
@@ -67,9 +78,6 @@ kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80 > /dev/null 2>
 # forward prometheus port
 kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 & 
 
-# get current values
-helm get values monitoring -n monitoring > ./infrastructure/monitoring/current-values.yaml
-
 # ----------------------------------------------------------
 
 # check prometheus label value for integrate with other services
@@ -78,7 +86,6 @@ kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
 # ----------------------------------------------------------
 
 # grafana dashboard
-
 ## dashboard for argocd
 https://argo-cd.readthedocs.io/en/release-1.8/operator-manual/metrics/#dashboards
 https://github.com/argoproj/argo-cd/blob/master/examples/dashboard.json
