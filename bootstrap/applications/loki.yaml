@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-stack
+  namespace: argocd
+  # 加上 Finalizer 確保刪除 App 時會連埋 D 資源一齊刪
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki-stack
+    targetRevision: 2.10.3  # 建議鎖定一個版本，唔好用 latest
+    helm:
+      # 這裡就是翻譯 "helm install --set ..." 的地方
+      parameters:
+        - name: grafana.enabled
+          value: "false"        # <--- 重要：唔好裝 Grafana
+        - name: prometheus.enabled
+          value: "false"        # <--- 重要：唔好裝 Prometheus
+        - name: promtail.enabled
+          value: "true"         # <--- 要 Promtail
+        - name: loki.persistence.enabled
+          value: "true"
+        - name: loki.persistence.size
+          value: "5Gi"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring  # 建議同 Prometheus 放埋同一個 namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      # 非常重要！解決 CRD 太大導致 Apply 失敗的問題
+      - ServerSideApply=true

@@ -26,6 +26,14 @@ grafana:
         requests:
           memory: 256Mi
           cpu: 50m
+  additionalDataSources:
+    - name: Loki
+      type: loki
+      # 因為大家都在 monitoring namespace，可以直接用 service name
+       # 根據你的 output，service 名係 "loki-stack"
+      url: http://loki-stack.monitoring.svc.cluster.local:3100
+      access: proxy
+      isDefault: false
 
 # 3. 大幅閹割 Prometheus
 prometheus:
