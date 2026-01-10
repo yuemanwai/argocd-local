@@ -70,10 +70,10 @@ k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /d
 # kube-prometheus-stack
 
 ## get grafana admin pw
-kubectl get secret monitoring-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
+kubectl get secret kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
 
 ## forward grafana port 3000
-kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
+kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
 
 # forward prometheus port
 kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 & 

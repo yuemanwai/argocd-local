@@ -38,3 +38,5 @@ spec:
       - CreateNamespace=true
       # 非常重要！解決 CRD 太大導致 Apply 失敗的問題
       - ServerSideApply=true
+      - Validate=false # 嘗試跳過 Schema 驗證
+      - PrunePropagationPolicy=foreground
