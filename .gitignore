@@ -12,3 +12,6 @@
 
 # Ignore all log files
 *.failed
+
+secrets/*
+git-creds.*
