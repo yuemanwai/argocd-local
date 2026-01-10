@@ -13,5 +13,6 @@
 # Ignore all log files
 *.failed
 
-secrets/*
-git-creds.*
+# Ignore all credential files
+*creds.yaml
+*creds.*
