@@ -34,7 +34,9 @@ grafana:
       url: http://loki.monitoring.svc.cluster.local:3100
       access: proxy
       isDefault: false
-
+      jsonData:
+        timeout: 60
+        maxLines: 1000
 # 3. 大幅閹割 Prometheus
 prometheus:
   prometheusSpec:
