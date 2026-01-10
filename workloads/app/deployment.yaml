@@ -23,7 +23,7 @@ spec:
         app: app
     spec:
       containers:
-        - image: docker.io/yuemanwai/fyp-jp:4857908
+        - image: docker.io/yuemanwai/fyp-jp:845ca7f
           name: app
           # always pull the latest image (for development only)
           imagePullPolicy: Always
