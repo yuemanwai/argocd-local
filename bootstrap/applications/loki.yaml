@@ -7,6 +7,13 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
+  ignoreDifferences:
+    - group: apps
+      kind: StatefulSet
+      name: loki-stack # 指名道姓只無視 loki-stack
+      jsonPointers:
+      - /spec/volumeClaimTemplates/0/apiVersion
+      - /spec/volumeClaimTemplates/0/kind
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
@@ -27,6 +34,10 @@ spec:
           value: "5Gi"
         - name: grafana.sidecar.datasources.enabled
           value: "false"
+        - name: loki.image.tag
+          value: "2.9.3"       # <--- 順便升級 Image 版本，因為舊版 (2.6.1) 可能不支援下面的參數
+        - name: loki.config.limits_config.volume_enabled
+          value: "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring  # 建議同 Prometheus 放埋同一個 namespace
