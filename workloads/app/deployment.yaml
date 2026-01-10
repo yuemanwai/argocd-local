@@ -6,6 +6,10 @@ metadata:
   name: app
   namespace: default
   annotations:
+    # 這三行係重點，話比 Prometheus 知：「黎 Scrape 我啦！」
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/metrics"
+    prometheus.io/port: "5000"  # 確保這是你 Flask 跑緊既 Port
     argocd.argoproj.io/ignore-differences: |
       - group: apps
         kind: Deployment
