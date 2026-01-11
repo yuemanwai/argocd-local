@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migration-job
+  namespace: default
+  annotations:
+    # 🔥 ArgoCD 必殺技：Sync Waves
+    # 這行指令話俾 ArgoCD 知：「Deploy App 之前，跑咗我先！」
+    argocd.argoproj.io/sync-wave: "-1"
+    # 跑完之後自動刪除個 Job，保持整潔 (Optional)
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  # 失敗重試次數
+  backoffLimit: 4
+  # 任務結束後 60秒 自動清理 Pod (K8s v1.23+)
+  ttlSecondsAfterFinished: 60
+  template:
+    spec:
+      containers:
+      - name: db-migration
+        # ✅ 重點：用返你同一個 App Image！
+        image: docker.io/yuemanwai/fyp-jp:845ca7f
+        imagePullPolicy: Always
+        
+        # ✅ 關鍵：這裡 Overwrite 咗 Dockerfile 預設的 ENTRYPOINT/CMD
+        # 佢唔會跑 boot.sh，只會跑這句 Python
+        command: ["python", "init_db.py"]
+        
+        # ⚠️ 記得：Job 都要食返 DB 密碼同 config
+        envFrom:
+          - configMapRef:
+              name: app-config
+          - secretRef:
+              name: app-secret
+      restartPolicy: OnFailure
