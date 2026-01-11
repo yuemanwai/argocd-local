@@ -22,10 +22,6 @@ spec:
     metadata:
       labels:
         app: app
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/metrics"
-        prometheus.io/port: "5000"  # 確保這是你 Flask 跑緊既 Port
     spec:
       containers:
         - image: docker.io/yuemanwai/fyp-jp:845ca7f
