@@ -23,7 +23,7 @@ controller:
       enabled: true
       # ⚠️ 這裡填返你 Prometheus 需要的 Label (通常係 release: prometheus)
       additionalLabels:
-        release: monitoring
+        release: kube-prometheus-stack
 
 server:
   replicas: 1
