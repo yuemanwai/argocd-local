@@ -10,10 +10,10 @@ grafana:
   resources:
     limits:
       cpu: 300m
-      memory: 512Mi # 限制佢最多食 512MB
+      memory: 1024Mi # 限制佢最多食 1024MB
     requests:
       cpu: 100m
-      memory: 256Mi
+      memory: 512Mi
   # 關閉 Sidecar (用黎自動搵 Dashboard 嘅，慳資源可以熄左佢，手動 import 都得)
   sidecar:
     dashboards:
@@ -51,10 +51,10 @@ prometheus:
     resources:
       limits:
         cpu: 500m
-        memory: 512Mi # 限制 Prometheus 最多食 512MB
+        memory: 1024Mi # 限制 Prometheus 最多食 1024MB
       requests:
         cpu: 100m
-        memory: 256Mi
+        memory: 512Mi
 
 # 4. 關閉一堆你暫時用唔著嘅 K8s 元件監控 (慳資源)
 kubeControllerManager:
