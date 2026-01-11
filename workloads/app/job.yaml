@@ -18,19 +18,17 @@ spec:
   template:
     spec:
       containers:
-      - name: db-migration
-        # ✅ 重點：用返你同一個 App Image！
-        image: docker.io/yuemanwai/fyp-jp:845ca7f
-        imagePullPolicy: Always
-        
-        # ✅ 關鍵：這裡 Overwrite 咗 Dockerfile 預設的 ENTRYPOINT/CMD
-        # 佢唔會跑 boot.sh，只會跑這句 Python
-        command: ["python", "init_db.py"]
-        
-        # ⚠️ 記得：Job 都要食返 DB 密碼同 config
-        envFrom:
-          - configMapRef:
-              name: app-config
-          - secretRef:
-              name: app-secret
+        - name: db-migration
+          # ✅ 重點：用返你同一個 App Image！
+          image: docker.io/yuemanwai/fyp-jp:7daa9bc
+          imagePullPolicy: Always
+          # ✅ 關鍵：這裡 Overwrite 咗 Dockerfile 預設的 ENTRYPOINT/CMD
+          # 佢唔會跑 boot.sh，只會跑這句 Python
+          command: ["python", "init_db.py"]
+          # ⚠️ 記得：Job 都要食返 DB 密碼同 config
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secret
       restartPolicy: OnFailure
