@@ -43,30 +43,32 @@ spec:
           ports:
             - containerPort: 5000
               protocol: TCP
-          # Liveness Probe - 檢查應用是否存活
-          livenessProbe:
+            
+          # 1. Startup Probe: 最先執行，專門俾時間 Python Import 野同建立 DB Pool
+          # 只要佢一日未 Pass，Liveness 同 Readiness 唔會搞你
+          startupProbe:
             httpGet:
-              path: /healthz
+              path: /startup
               port: 5000
-            initialDelaySeconds: 90
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
-          # Readiness Probe - 檢查應用是否就緒
+            failureThreshold: 30
+            periodSeconds: 10
+
+          # 2. Readiness Probe: Startup Pass 左之後，由佢接手
           readinessProbe:
             httpGet:
               path: /readyz
               port: 5000
-            initialDelaySeconds: 45
-            periodSeconds: 15
-            timeoutSeconds: 10
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 3
-# # Startup Probe - 檢查應用啟動
-# startupProbe:
-#   httpGet:
-#     path: /startup
-#     port: 5000
-#   initialDelaySeconds: 0
-#   periodSeconds: 10
-#   timeoutSeconds: 3
-#   failureThreshold: 30
+
+          # 3. Liveness Probe: 最後防線
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 20
+            timeoutSeconds: 2
+            failureThreshold: 3
