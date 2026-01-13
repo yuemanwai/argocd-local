@@ -14,7 +14,7 @@ spec:
       jsonPointers:
       - /spec/volumeClaimTemplates/0/apiVersion
       - /spec/volumeClaimTemplates/0/kind
-      - /spec/spec/containers/resources
+      - /spec/template/spec/containers/0/resources
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts

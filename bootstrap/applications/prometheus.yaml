@@ -32,10 +32,27 @@ spec:
 
   # --- 同步策略 ---
   syncPolicy:
+  # --- 同步策略 ---
+  syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      # 非常重要！解決 CRD 太大導致 Apply 失敗的問題
-      - ServerSideApply=true
+  
+  # --- Ignore differences for runtime modifications ---
+  ignoreDifferences:
+    # Ignore webhook CA bundle updates (managed by cert-manager or Kubernetes)
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    # Ignore deployment replicas (managed by HPA)
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
