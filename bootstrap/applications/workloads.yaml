@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: my-project
+  name: my-app
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/yuemanwai/argocd-local.git
     targetRevision: HEAD
-    path: charts/fyp-app  # 指向你存放 Chart.yaml 的路徑
+    path: charts/jp  # 指向你存放 Chart.yaml 的路徑
     
     # 這裡可以 Override values.yaml
     helm:
@@ -21,7 +21,7 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: my-ns # 你想 deploy 去邊個 namespace
+    namespace: default # 你想 deploy 去邊個 namespace
 
   # 自動同步設定
   syncPolicy:

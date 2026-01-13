@@ -1,9 +1,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "fyp-app.fullname" . }}-init-db
+  name: {{ include "jp.fullname" . }}-init-db
   labels:
-    {{- include "fyp-app.labels" . | nindent 4 }}
+    {{- include "jp.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": post-install,pre-upgrade
 spec:
@@ -17,8 +17,8 @@ spec:
         command: ["/bin/sh", "-c", "python init_db.py && python test_data.py"]
         envFrom:
           - configMapRef:
-              name: {{ include "fyp-app.fullname" . }} # 讀取你的 App config
+              name: {{ include "jp.fullname" . }} # 讀取你的 App config
           - secretRef:
-              name: {{ include "fyp-app.fullname" . }} # 讀取你的 RDS 密碼
+              name: {{ include "jp.fullname" . }} # 讀取你的 RDS 密碼
       restartPolicy: OnFailure
       imagePullPolicy: IfNotPresent

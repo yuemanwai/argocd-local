@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "fyp-app.fullname" . }}-db
+  name: {{ include "jp.fullname" . }}-db
   labels:
-    {{- include "fyp-app.labels" . | nindent 4 }}
+    {{- include "jp.labels" . | nindent 4 }}
     component: database
 spec:
-  serviceName: {{ include "fyp-app.fullname" . }}-db
+  serviceName: {{ include "jp.fullname" . }}-db
   # replicas: 1
   selector:
     matchLabels:
-      {{- include "fyp-app.selectorLabels" . | nindent 6 }}
+      {{- include "jp.selectorLabels" . | nindent 6 }}
       component: database
   template:
     metadata:
       labels:
-        {{- include "fyp-app.labels" . | nindent 8 }}
+        {{- include "jp.labels" . | nindent 8 }}
         component: database
     spec:
       containers:
@@ -23,9 +23,9 @@ spec:
         name: postgres
         envFrom:
         - secretRef:
-            name: {{ include "fyp-app.fullname" . }}-db
+            name: {{ include "jp.fullname" . }}-db
         - configMapRef:
-            name: {{ include "fyp-app.fullname" . }}-db
+            name: {{ include "jp.fullname" . }}-db
         resources:
           requests:
             cpu: "0.25"

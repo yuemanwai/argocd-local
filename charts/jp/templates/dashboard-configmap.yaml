@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "fyp-app.fullname" . }}-dashboard
+  name: {{ include "jp.fullname" . }}-dashboard
   labels:
-    {{- include "fyp-app.labels" . | nindent 4 }}
+    {{- include "jp.labels" . | nindent 4 }}
     # 這是重點！這行 Label 告訴 Grafana Sidecar：「我是 Dashboard，請吃了我」
     # 注意：這個 Label key/value 必須配合你安裝 kube-prometheus-stack 時的設定
     # 預設通常是 grafana_dashboard: "1"
