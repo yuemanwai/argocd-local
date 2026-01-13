@@ -106,7 +106,7 @@ Access at: https://localhost:8090
 
 ### Application Service
 ```bash
-k port-forward service/app-svc 8080:80 > /dev/null 2>&1 &
+k port-forward service/my-app-jp 8080:5000 > /dev/null 2>&1 &
 ```
 Access at: http://localhost:8080
 

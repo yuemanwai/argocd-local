@@ -17,6 +17,7 @@ spec:
   selector:
     matchLabels:
       {{- include "jp.selectorLabels" . | nindent 6 }}
+      component: app
   endpoints:
   - port: http
     path: {{ .Values.serviceMonitor.path | default "/metrics" }}

@@ -9,3 +9,4 @@ spec:
   selector:
     matchLabels:
       {{- include "jp.selectorLabels" . | nindent 6 }}
+      component: app
