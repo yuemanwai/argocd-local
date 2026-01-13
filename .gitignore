@@ -16,7 +16,3 @@
 # Ignore all credential files
 *creds.yaml
 *creds.*
-
-# Ignore all credential files
-/workloads/app/*
-/workloads/db/*
