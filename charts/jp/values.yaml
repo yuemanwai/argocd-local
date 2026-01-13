@@ -220,7 +220,7 @@ serviceMonitor:
   enabled: true
   additionalLabels:
     release: kube-prometheus-stack
-  paths: "/metrics"
+  path: "/metrics"
   interval: "30s"
 
 # ================================================================
