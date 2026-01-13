@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: fyp-flask-app
+  name: my-project
   namespace: argocd
 spec:
   project: default
@@ -21,7 +21,7 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: fyp # 你想 deploy 去邊個 namespace
+    namespace: my-ns # 你想 deploy 去邊個 namespace
 
   # 自動同步設定
   syncPolicy:
