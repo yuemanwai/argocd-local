@@ -63,7 +63,7 @@ repoServer:
 applicationSet:
   # 如果你唔用 ApplicationSet (進階功能)，可以設做 false 慳資源
   # 但 FYP 建議留住，反正食好少野
-  enabled: true
+  enabled: false
   resources:
     requests:
       cpu: "50m"

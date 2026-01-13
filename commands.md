@@ -49,7 +49,7 @@ helm install argocd argo/argo-cd \
 # 永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛
 helm upgrade --install argocd argo/argo-cd \
   --namespace argocd \
-  --values ./argocd/values.yaml \
+  --values ./infrastructure/argocd/values.yaml \
   --atomic
 ```
 

@@ -47,18 +47,3 @@ spec:
       resources:
         requests:
           storage: 1Gi
-
-
-
-spec:
-  serviceName: {{ include "fyp-app.fullname" . }}-db # Headless service name
-  selector:
-    matchLabels:
-      # 重點 2：這裡絕對不能只用標準 selectorLabels，否則會同 Flask App 撞！
-      {{- include "fyp-app.selectorLabels" . | nindent 6 }}
-      component: database
-  template:
-    metadata:
-      labels:
-        {{- include "fyp-app.selectorLabels" . | nindent 8 }}
-        component: database

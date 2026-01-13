@@ -21,7 +21,7 @@ spec:
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: default # 你想 deploy 去邊個 namespace
+    namespace: fyp # 你想 deploy 去邊個 namespace
 
   # 自動同步設定
   syncPolicy:
