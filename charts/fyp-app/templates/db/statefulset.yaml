@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "fyp-app.fullname" . }}-db
+  labels:
+    {{- include "fyp-app.labels" . | nindent 4 }}
+    component: database
+spec:
+  serviceName: {{ include "fyp-app.fullname" . }}-db
+  # replicas: 1
+  selector:
+    matchLabels:
+      {{- include "fyp-app.selectorLabels" . | nindent 6 }}
+      component: database
+  template:
+    metadata:
+      labels:
+        {{- include "fyp-app.labels" . | nindent 8 }}
+        component: database
+    spec:
+      containers:
+      - image: postgres:16-bookworm
+        name: postgres
+        envFrom:
+        - secretRef:
+            name: {{ include "fyp-app.fullname" . }}-db
+        - configMapRef:
+            name: {{ include "fyp-app.fullname" . }}-db
+        resources:
+          requests:
+            cpu: "0.25"
+            memory: 256Mi
+          limits:
+            cpu: "0.5"
+            memory: 512Mi
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
+
+
+
+spec:
+  serviceName: {{ include "fyp-app.fullname" . }}-db # Headless service name
+  selector:
+    matchLabels:
+      # 重點 2：這裡絕對不能只用標準 selectorLabels，否則會同 Flask App 撞！
+      {{- include "fyp-app.selectorLabels" . | nindent 6 }}
+      component: database
+  template:
+    metadata:
+      labels:
+        {{- include "fyp-app.selectorLabels" . | nindent 8 }}
+        component: database

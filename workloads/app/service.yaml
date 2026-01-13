@@ -6,6 +6,7 @@ metadata:
   name: app-svc
   namespace: default
 spec:
+  type: ClusterIP
   ports:
   - name: http-web
     port: 80
@@ -13,5 +14,4 @@ spec:
     targetPort: 5000
   selector:
     app: app
-  type: ClusterIP
 

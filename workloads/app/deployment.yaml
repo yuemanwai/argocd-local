@@ -1,12 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: app
   labels:
     app: app
-  name: app
   namespace: default
   annotations:
-    # 這三行係重點，話比 Prometheus 知：「黎 Scrape 我啦！」
     argocd.argoproj.io/ignore-differences: |
       - group: apps
         kind: Deployment
@@ -23,14 +22,16 @@ spec:
       labels:
         app: app
     spec:
+      imagePullSecrets:
+        - name: app-secret
       containers:
         - image: docker.io/yuemanwai/fyp-jp:01a3319
           name: app
           # always pull the latest image (for development only)
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           envFrom:
             - secretRef:
-                name: app-secret
+              name: app-secret
             - configMapRef:
                 name: app-config
           resources:

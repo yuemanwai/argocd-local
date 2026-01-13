@@ -1,0 +1,16 @@
+{{- if .Values.dashboard.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fyp-app.fullname" . }}-dashboard
+  labels:
+    {{- include "fyp-app.labels" . | nindent 4 }}
+    # 這是重點！這行 Label 告訴 Grafana Sidecar：「我是 Dashboard，請吃了我」
+    # 注意：這個 Label key/value 必須配合你安裝 kube-prometheus-stack 時的設定
+    # 預設通常是 grafana_dashboard: "1"
+    grafana_dashboard: "1"
+data:
+  # 這是魔法：自動讀取 dashboards/ folder 下的 JSON 檔案內容
+  flask-overview.json: |
+    {{- .Files.Get "dashboards/flask-overview.json" | nindent 4 }}
+{{- end }}

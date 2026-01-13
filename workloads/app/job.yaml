@@ -21,7 +21,7 @@ spec:
         - name: db-migration
           # ✅ 重點：用返你同一個 App Image！
           image: docker.io/yuemanwai/fyp-jp:01a3319
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           # ✅ 關鍵：這裡 Overwrite 咗 Dockerfile 預設的 ENTRYPOINT/CMD
           # 佢唔會跑 boot.sh，只會跑這句 Python
           command: ["/bin/sh", "-c", "python init_db.py && python test_data.py"]
