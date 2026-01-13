@@ -5,7 +5,8 @@ metadata:
   labels:
     {{- include "jp.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": post-install,pre-upgrade
+    "argocd.argoproj.io/hook": PostSync
+    "argocd.argoproj.io/hook-delete-policy": HookSucceeded
 spec:
   backoffLimit: {{ .Values.job.backoffLimitCount }}
   ttlSecondsAfterFinished: 60
