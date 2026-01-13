@@ -10,11 +10,10 @@ grafana:
   resources:
     limits:
       cpu: 300m
-      memory: 1024Mi # 限制佢最多食 1024MB
+      memory: 1024Mi
     requests:
       cpu: 100m
       memory: 512Mi
-  # 關閉 Sidecar (用黎自動搵 Dashboard 嘅，慳資源可以熄左佢，手動 import 都得)
   sidecar:
     dashboards:
       enabled: true
@@ -29,8 +28,6 @@ grafana:
   additionalDataSources:
     - name: Loki
       type: loki
-      # 因為大家都在 monitoring namespace，可以直接用 service name
-       # 根據你的 output，service 名係 "loki-stack"
       url: http://loki-stack.monitoring.svc.cluster.local:3100
       access: proxy
       isDefault: false
@@ -44,14 +41,13 @@ prometheus:
     storageSpec: 
       emptyDir:
         medium: Memory
-    # 數據只留 6 個鐘 (Default 係 10 日！你的 Notebook 硬碟會多謝你)
     retention: 6h 
     
     # 限制資源
     resources:
       limits:
         cpu: 500m
-        memory: 1024Mi # 限制 Prometheus 最多食 1024MB
+        memory: 1024Mi
       requests:
         cpu: 100m
         memory: 512Mi

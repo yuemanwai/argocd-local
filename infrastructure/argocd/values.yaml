@@ -1,27 +1,16 @@
 # ==========================================================
-# ArgoCD Helm Chart - Lite Version for FYP/Minikube
+# ArgoCD Helm Chart
 # ==========================================================
 
-# 1. 全局設定：單機模式，唔好搞 HA
 redis-ha:
-  enabled: false # 關閉 Redis Cluster (最食資源)
+  enabled: false
 
 controller:
   replicas: 1
-  # 資源預留：設得好低，確保 Minikube 實跑得起
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "256Mi"
-    limits:
-      cpu: "500m"
-      memory: "1Gi"
-  # 自動開啟 Metrics (配合你的 kube-prometheus-stack)
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
-      # ⚠️ 這裡填返你 Prometheus 需要的 Label (通常係 release: prometheus)
       additionalLabels:
         release: kube-prometheus-stack
 
@@ -29,30 +18,20 @@ server:
   replicas: 1
   autoscaling:
     enabled: false
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "128Mi"
-  # 開啟 Metrics
   metrics:
     enabled: true
     serviceMonitor:
       enabled: true
       additionalLabels:
         release: prometheus
-  # 如果你想用 NodePort 直接 Access (唔洗 port-forward)
-  service:
-    type: NodePort
+  # # 如果你想用 NodePort 直接 Access (唔洗 port-forward)
+  # service:
+  #   type: NodePort
 
 repoServer:
   replicas: 1
   autoscaling:
     enabled: false
-  resources:
-    requests:
-      # Git Clone 比較食力，稍微比多小小
-      cpu: "50m"
-      memory: "128Mi"
   metrics:
     enabled: true
     serviceMonitor:
@@ -61,27 +40,10 @@ repoServer:
         release: prometheus
 
 applicationSet:
-  # 如果你唔用 ApplicationSet (進階功能)，可以設做 false 慳資源
-  # 但 FYP 建議留住，反正食好少野
   enabled: false
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
 
 dex:
-  # SSO Login 服務，如果你只用 admin password，其實可以 disable
-  # 但建議開住，因為佢食資源極少
   enabled: false
-  resources:
-    requests:
-      cpu: "10m"
-      memory: "32Mi"
 
 notifications:
-  # 你想要的 Alert 功能！
   enabled: true
-  resources:
-    requests:
-      cpu: "10m"
-      memory: "32Mi"
