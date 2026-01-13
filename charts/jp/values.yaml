@@ -151,13 +151,40 @@ podDisruptionBudget:
   minAvailable: 1
 
 # ================================================================
+# Database Settings
+# ================================================================
+database:
+  # PostgreSQL image configuration
+  image:
+    repository: postgres
+    tag: "16-bookworm"
+    pullPolicy: IfNotPresent
+  # Database name
+  name: "postgres"
+  # Database credentials
+  username: "postgres"
+  password: "postgres"
+  # Database port
+  port: 5432
+  # Resource limits
+  resources:
+    requests:
+      cpu: "0.25"
+      memory: 256Mi
+    limits:
+      cpu: "0.5"
+      memory: 512Mi
+  # Persistent volume configuration
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 1Gi
+
+# ================================================================
 # ConfigMap Settings
 # ================================================================
+# Note: DB_HOST, DB_PORT, DB_NAME are auto-injected from database config
 configMap: 
-  # Database configuration
-  DB_HOST: "my-app-jp-db.default.svc.cluster.local"
-  DB_PORT: "5432"
-  DB_NAME: "postgres"
   SQLALCHEMY_TRACK_MODIFICATIONS: "false"
   SESSION_SQLALCHEMY_TABLE: "flask_sessions_data"
   # Mail server configuration
@@ -176,12 +203,10 @@ configMap:
 # ================================================================
 # Secret Settings
 # ================================================================
+# Note: DB_USERNAME, DB_PASSWORD are auto-injected from database config
 secret:
   # Flask secret key
   SECRET_KEY: "just-a-placeholder"
-  # PostgreSQL credentials
-  DB_USERNAME: "postgres"
-  DB_PASSWORD: "postgres"
   # Mail server credentials (if MailHog doesn't require a password, you can omit this)
   # MAIL_USERNAME: <mail_user>
   # MAIL_PASSWORD: <mail_pass>

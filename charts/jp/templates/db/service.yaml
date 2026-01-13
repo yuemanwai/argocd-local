@@ -8,9 +8,9 @@ metadata:
 spec:
   ports:
   - name: postgres
-    port: 5432
+    port: {{ .Values.database.port }}
     protocol: TCP
-    targetPort: 5432
+    targetPort: {{ .Values.database.port }}
   selector:
     {{- include "jp.selectorLabels" . | nindent 4 }}
     component: database

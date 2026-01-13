@@ -5,6 +5,14 @@ metadata:
   labels:
     {{- include "jp.labels" . | nindent 4 }}
 data:
+  # Database configuration - dynamically constructed
+  DB_HOST: {{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
+  DB_PORT: {{ .Values.database.port | quote }}
+  DB_NAME: {{ .Values.database.name | quote }}
   {{- with .Values.configMap }}
-  {{- toYaml . | nindent 2 }}
+  {{- range $key, $value := . }}
+  {{- if and (ne $key "DB_HOST") (ne $key "DB_PORT") (ne $key "DB_NAME") }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+  {{- end }}
   {{- end }}

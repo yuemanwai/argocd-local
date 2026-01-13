@@ -19,31 +19,31 @@ spec:
         component: database
     spec:
       containers:
-      - image: postgres:16-bookworm
+      - image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+        imagePullPolicy: {{ .Values.database.image.pullPolicy }}
         name: postgres
         envFrom:
         - secretRef:
             name: {{ include "jp.fullname" . }}-db
         - configMapRef:
             name: {{ include "jp.fullname" . }}-db
+        {{- with .Values.database.resources }}
         resources:
-          requests:
-            cpu: "0.25"
-            memory: 256Mi
-          limits:
-            cpu: "0.5"
-            memory: 512Mi
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         ports:
-        - containerPort: 5432
+        - containerPort: {{ .Values.database.port }}
           protocol: TCP
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
+  {{- if .Values.database.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:
       name: postgres-data
     spec:
-      accessModes: [ "ReadWriteOnce" ]
+      accessModes: [ {{ .Values.database.persistence.accessMode | quote }} ]
       resources:
         requests:
-          storage: 1Gi
+          storage: {{ .Values.database.persistence.size }}
+  {{- end }}

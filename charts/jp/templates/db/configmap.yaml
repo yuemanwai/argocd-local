@@ -6,4 +6,4 @@ metadata:
     {{- include "jp.labels" . | nindent 4 }}
     component: database
 data:
-  POSTGRES_DB: "postgres"
+  POSTGRES_DB: {{ .Values.database.name | quote }}
