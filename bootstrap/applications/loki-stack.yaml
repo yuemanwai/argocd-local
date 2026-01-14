@@ -3,7 +3,6 @@ kind: Application
 metadata:
   name: loki-stack
   namespace: argocd
-  # 加上 Finalizer 確保刪除 App 時會連埋 D 資源一齊刪
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -12,23 +11,28 @@ spec:
       kind: StatefulSet
       name: loki-stack # 指名道姓只無視 loki-stack
       jsonPointers:
-      - /spec/volumeClaimTemplates/0/apiVersion
-      - /spec/volumeClaimTemplates/0/kind
-      - /spec/template/spec/containers/0/resources
+        - /spec/volumeClaimTemplates/0/apiVersion
+        - /spec/volumeClaimTemplates/0/kind
+        - /spec/template/spec/containers/0/resources
+    - group: apps
+      kind: DaemonSet
+      name: loki-stack-promtail
+      jsonPointers:
+        - /spec/template/spec/containers/0/resources
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
     chart: loki-stack
-    targetRevision: 2.10.3  # 建議鎖定一個版本，唔好用 latest
+    targetRevision: 2.10.3 # 建議鎖定一個版本，唔好用 latest
     helm:
       # 這裡就是翻譯 "helm install --set ..." 的地方
       parameters:
         - name: grafana.enabled
-          value: "false"        # <--- 重要：唔好裝 Grafana
+          value: "false" # <--- 重要：唔好裝 Grafana
         - name: prometheus.enabled
-          value: "false"        # <--- 重要：唔好裝 Prometheus
+          value: "false" # <--- 重要：唔好裝 Prometheus
         - name: promtail.enabled
-          value: "true"         # <--- 要 Promtail
+          value: "true" # <--- 要 Promtail
         - name: loki.persistence.enabled
           value: "true"
         - name: loki.persistence.size
@@ -36,12 +40,12 @@ spec:
         - name: grafana.sidecar.datasources.enabled
           value: "false"
         - name: loki.image.tag
-          value: "2.9.3"       # <--- 順便升級 Image 版本，因為舊版 (2.6.1) 可能不支援下面的參數
+          value: "2.9.3" # <--- 順便升級 Image 版本，因為舊版 (2.6.1) 可能不支援下面的參數
         - name: loki.config.limits_config.volume_enabled
           value: "true"
   destination:
     server: https://kubernetes.default.svc
-    namespace: monitoring  # 建議同 Prometheus 放埋同一個 namespace
+    namespace: monitoring # 建議同 Prometheus 放埋同一個 namespace
   syncPolicy:
     automated:
       prune: true

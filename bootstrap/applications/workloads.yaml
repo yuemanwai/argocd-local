@@ -10,8 +10,8 @@ spec:
   source:
     repoURL: https://github.com/yuemanwai/argocd-local.git
     targetRevision: HEAD
-    path: charts/jp  # 指向你存放 Chart.yaml 的路徑
-    
+    path: charts/jp # 指向你存放 Chart.yaml 的路徑
+
     # 這裡可以 Override values.yaml
     helm:
       valueFiles:
@@ -28,7 +28,7 @@ spec:
   # 自動同步設定
   syncPolicy:
     automated:
-      prune: true    # Git 刪除檔案時，K8s 自動刪除資源
+      prune: true # Git 刪除檔案時，K8s 自動刪除資源
       selfHeal: true # 如果有人手多改 K8s，ArgoCD 自動還原
     syncOptions:
       - CreateNamespace=true

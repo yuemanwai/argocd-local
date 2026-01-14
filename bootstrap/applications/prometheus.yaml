@@ -3,10 +3,31 @@ kind: Application
 metadata:
   name: kube-prometheus-stack
   namespace: argocd
-  # 加上 Finalizer 確保刪除 App 時會連埋 D 資源一齊刪
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
+  # --- Ignore differences for runtime modifications ---
+  ignoreDifferences:
+    # Ignore webhook CA bundle updates (managed by cert-manager or Kubernetes)
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      jsonPointers:
+        - /webhooks/0/clientConfig/caBundle
+    - group: apps
+      kind: DaemonSet
+      name: kube-prometheus-stack-prometheus-node-exporter
+      jsonPointers:
+        - /spec/template/spec/containers/0/resources
+    - group: apps
+      kind: Deployment
+      name: kube-prometheus-stack-grafana
+      jsonPointers:
+        - /spec/template/spec/containers/0/resources
+        - /spec/template/spec/containers/1/resources
   project: default
 
   # --- 關鍵：多重來源 (Multiple Sources) ---
@@ -38,20 +59,3 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-
-  # --- Ignore differences for runtime modifications ---
-  # ignoreDifferences:
-  #   # Ignore webhook CA bundle updates (managed by cert-manager or Kubernetes)
-  #   - group: admissionregistration.k8s.io
-  #     kind: MutatingWebhookConfiguration
-  #     jsonPointers:
-  #       - /webhooks/0/clientConfig/caBundle
-  #   - group: admissionregistration.k8s.io
-  #     kind: ValidatingWebhookConfiguration
-  #     jsonPointers:
-  #       - /webhooks/0/clientConfig/caBundle
-  #   # Ignore deployment replicas (managed by HPA)
-  #   - group: apps
-  #     kind: Deployment
-  #     jsonPointers:
-  #       - /spec/replicas
