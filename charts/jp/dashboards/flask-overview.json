@@ -1019,7 +1019,7 @@
   "timezone": "",
   "title": "Flask Monitoring",
   "uid": "flask-overview",
-  "version": 1,
+  "version": 2,
   "weekStart": "",
   "gnetId": 16111,
   "description": "Flask Monitoring with StatsD"
