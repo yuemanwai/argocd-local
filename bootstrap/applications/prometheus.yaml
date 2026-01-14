@@ -8,13 +8,13 @@ metadata:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
-  
+
   # --- 關鍵：多重來源 (Multiple Sources) ---
   sources:
     # 來源 1: 官方 Helm Chart
     - repoURL: https://prometheus-community.github.io/helm-charts
       chart: kube-prometheus-stack
-      targetRevision: 68.4.4  # 建議鎖定版本，唔好用 latest
+      targetRevision: 68.4.4 # 建議鎖定版本，唔好用 latest
       helm:
         # 這裡參照下面定義既 "argocd-local"
         valueFiles:
@@ -23,7 +23,7 @@ spec:
     # 來源 2: 你既 Github Repo (存放 values.yaml)
     - repoURL: https://github.com/yuemanwai/argocd-local.git
       targetRevision: HEAD
-      ref: argocd-local  # 比個名佢，等上面可以用 $argocd-local 黎引用
+      ref: argocd-local # 比個名佢，等上面可以用 $argocd-local 黎引用
 
   # --- 部署目標 ---
   destination:
@@ -38,21 +38,20 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
-      - Replace=true
-  
+
   # --- Ignore differences for runtime modifications ---
-  ignoreDifferences:
-    # Ignore webhook CA bundle updates (managed by cert-manager or Kubernetes)
-    - group: admissionregistration.k8s.io
-      kind: MutatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/clientConfig/caBundle
-    - group: admissionregistration.k8s.io
-      kind: ValidatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/clientConfig/caBundle
-    # Ignore deployment replicas (managed by HPA)
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas
+  # ignoreDifferences:
+  #   # Ignore webhook CA bundle updates (managed by cert-manager or Kubernetes)
+  #   - group: admissionregistration.k8s.io
+  #     kind: MutatingWebhookConfiguration
+  #     jsonPointers:
+  #       - /webhooks/0/clientConfig/caBundle
+  #   - group: admissionregistration.k8s.io
+  #     kind: ValidatingWebhookConfiguration
+  #     jsonPointers:
+  #       - /webhooks/0/clientConfig/caBundle
+  #   # Ignore deployment replicas (managed by HPA)
+  #   - group: apps
+  #     kind: Deployment
+  #     jsonPointers:
+  #       - /spec/replicas
