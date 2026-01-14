@@ -133,7 +133,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum (flask_http_request_total{service=\"$service\"})",
+          "expr": "sum (flask_http_request_total{service=~\"$service\"})",
           "interval": "",
           "legendFormat": "",
           "range": true,
@@ -146,7 +146,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum (flask_http_request_total{service=\"$service\"})",
+          "expr": "sum (flask_http_request_total{service=~\"$service\"})",
           "hide": false,
           "instant": true,
           "legendFormat": "__auto",
@@ -231,7 +231,7 @@
           },
           "editorMode": "code",
           "exemplar": true,
-          "expr": "sum (flask_http_request_total{service=\"$service\"}) by(status)",
+          "expr": "sum (flask_http_request_total{service=~\"$service\"}) by(status)",
           "interval": "",
           "legendFormat": "HTTP Status: {{status}}",
           "range": true,
@@ -244,7 +244,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum (flask_http_request_total{service=\"$service\"}) by(status)",
+          "expr": "sum (flask_http_request_total{service=~\"$service\"}) by(status)",
           "hide": false,
           "instant": true,
           "legendFormat": "HTTP Status: {{status}}",
@@ -339,7 +339,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "flask_http_request_duration_seconds_sum{service=\"flask-monitoring\"} / flask_http_request_duration_seconds_count{service=\"flask-monitoring\"}",
+          "expr": "flask_http_request_duration_seconds_sum{service=~\"$service\"} / flask_http_request_duration_seconds_count{service=~\"$service\"}",
           "interval": "",
           "legendFormat": "{{method}} {{endpoint}}",
           "refId": "A"
@@ -435,7 +435,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "flask_http_request_duration_seconds_count{service=\"$service\"}",
+          "expr": "flask_http_request_duration_seconds_count{service=~\"$service\"}",
           "interval": "",
           "legendFormat": "{{method}} {{endpoint}}",
           "refId": "A"
@@ -532,7 +532,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "rate(flask_http_request_duration_seconds_count{service=\"flask-monitoring\"}[1m])",
+          "expr": "rate(flask_http_request_duration_seconds_count{service=~\"$service\"}[1m])",
           "interval": "",
           "legendFormat": "{{endpoint}}",
           "refId": "A"
@@ -630,7 +630,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "sum(flask_http_request_total{service=\"$service\", status=~\"2.*\"}) by(endpoint, method) / sum(flask_http_request_total{service=\"$service\"}) by(endpoint, method)",
+          "expr": "sum(flask_http_request_total{service=~\"$service\", status=~\"2.*\"}) by(endpoint, method) / sum(flask_http_request_total{service=~\"$service\"}) by(endpoint, method)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{method}} {{endpoint}} ",
@@ -730,7 +730,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "sum(flask_http_request_total{service=\"$service\", status=~\"5.*\"}) by(endpoint, method) / sum(flask_http_request_total{service=\"$service\"}) by(endpoint, method)",
+          "expr": "sum(flask_http_request_total{service=~\"$service\", status=~\"5.*\"}) by(endpoint, method) / sum(flask_http_request_total{service=~\"$service\"}) by(endpoint, method)",
           "hide": false,
           "interval": "",
           "legendFormat": "{{method}} {{endpoint}} ",
@@ -823,7 +823,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": true,
-          "expr": "flask_http_request_duration_seconds_sum{service=\"$service\"} / flask_http_request_duration_seconds_count{service=\"$service\"}",
+          "expr": "flask_http_request_duration_seconds_sum{service=~\"$service\"} / flask_http_request_duration_seconds_count{service=~\"$service\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{endpoint}}",
@@ -897,7 +897,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": false,
-          "expr": "flask_http_request_duration_seconds{service=\"$service\", quantile='0.5'}",
+          "expr": "flask_http_request_duration_seconds{service=~\"$service\", quantile='0.5'}",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -910,7 +910,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": false,
-          "expr": "flask_http_request_duration_seconds{service=\"$service\", quantile='0.9'}",
+          "expr": "flask_http_request_duration_seconds{service=~\"$service\", quantile='0.9'}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -924,7 +924,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "exemplar": false,
-          "expr": "flask_http_request_duration_seconds{service=\"$service\", quantile='0.99'}",
+          "expr": "flask_http_request_duration_seconds{service=~\"$service\", quantile='0.99'}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1018,7 +1018,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Flask Monitoring",
-  "uid": "flask-monitoring",
+  "uid": "my-app-jp",
   "version": 1,
   "weekStart": "",
   "gnetId": 16111,
