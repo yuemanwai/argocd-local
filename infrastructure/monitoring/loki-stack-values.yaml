@@ -28,6 +28,13 @@ loki:
   config:
     limits_config:
       volume_enabled: true
+  resources:
+    limits:
+      memory: 1Gi
+      cpu: 500m
+    requests:
+      memory: 512Mi
+      cpu: 250m
 
 promtail:
   enabled: true
