@@ -18,6 +18,7 @@ grafana:
     dashboards:
       enabled: true
       label: grafana_dashboard
+      searchNamespace: ALL # 掃描所有 namespace
       resources:
         limits:
           memory: 512Mi
@@ -38,11 +39,11 @@ grafana:
 prometheus:
   prometheusSpec:
     # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
-    storageSpec: 
+    storageSpec:
       emptyDir:
         medium: Memory
-    retention: 6h 
-    
+    retention: 6h
+
     # 限制資源
     resources:
       limits:
