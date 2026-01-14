@@ -10,9 +10,9 @@ metadata:
     # 預設通常是 grafana_dashboard: "1"
     grafana_dashboard: "1"
 data:
-  # 這是魔法：自動讀取 dashboards/ folder 下的 JSON 檔案內容
+  # 這是魔法：自動讀取 dashboards/ folder 下的 JSON 檔案內容，並替換 datasource 變數
   flask-overview.json: |
-    {{- .Files.Get "dashboards/flask-overview.json" | nindent 4 }}
+    {{- .Files.Get "dashboards/flask-overview.json" | replace "${DS_PROMETHEUS}" (.Values.dashboard.datasourceUid | default "prometheus") | nindent 4 }}
   hpa-dashboard.json: |
-    {{- .Files.Get "dashboards/hpa-dashboard.json" | nindent 4 }}
+    {{- .Files.Get "dashboards/hpa-dashboard.json" | replace "${DS_PROMETHEUS}" (.Values.dashboard.datasourceUid | default "prometheus") | nindent 4 }}
 {{- end }}

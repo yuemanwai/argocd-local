@@ -2,7 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-
 # ================================================================
 # Deployment Settings
 # ================================================================
@@ -115,7 +114,6 @@ tolerations: []
 
 affinity: {}
 
-
 # ================================================================
 # Service Settings
 # ================================================================
@@ -126,7 +124,6 @@ service:
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 5000
 
-
 # ================================================================
 # Horizontal Pod Autoscaler Settings
 # ================================================================
@@ -136,7 +133,6 @@ autoscaling:
   maxReplicas: 3
   targetCPUUtilizationPercentage: 60
   targetMemoryUtilizationPercentage: 60
-
 
 # ================================================================
 # Job Settings - init-db and seed test-data
@@ -184,7 +180,7 @@ database:
 # ConfigMap Settings
 # ================================================================
 # Note: DB_HOST, DB_PORT, DB_NAME are auto-injected from database config
-configMap: 
+configMap:
   SQLALCHEMY_TRACK_MODIFICATIONS: "false"
   SESSION_SQLALCHEMY_TABLE: "flask_sessions_data"
   # Mail server configuration
@@ -198,7 +194,6 @@ configMap:
   ADMINS: "admin@example.com"
   POSTS_PER_PAGE: "10"
   LANGUAGES: "en, es, zh"
-
 
 # ================================================================
 # Secret Settings
@@ -228,6 +223,7 @@ serviceMonitor:
 # ================================================================
 dashboard:
   enabled: true
+  datasourceUid: prometheus # Grafana Prometheus datasource UID
 
 # ================================================================
 # Ingress Settings
