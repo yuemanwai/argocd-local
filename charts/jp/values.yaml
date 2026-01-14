@@ -224,12 +224,7 @@ serviceMonitor:
 dashboard:
   enabled: true
   datasourceUid: prometheus # Grafana Prometheus datasource UID
-# ================================================================
-# Monitoring Settings (ServiceMonitor)
-# ================================================================
-monitoring:
-  lokiServiceMonitor:
-    enabled: false  # Set to true to enable Loki monitoring
+
 # ================================================================
 # Ingress Settings
 # ================================================================
