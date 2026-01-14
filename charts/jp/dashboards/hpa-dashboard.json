@@ -681,7 +681,7 @@
   "refresh": "1m",
   "schemaVersion": 37,
   "style": "dark",
-  "tags": [],
+  "tags": ["kubernetes", "hpa", "scaling", "performance"],
   "templating": {
     "list": [
       {
