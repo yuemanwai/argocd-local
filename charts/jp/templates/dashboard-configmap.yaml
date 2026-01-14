@@ -13,4 +13,6 @@ data:
   # 這是魔法：自動讀取 dashboards/ folder 下的 JSON 檔案內容
   flask-overview.json: |
     {{- .Files.Get "dashboards/flask-overview.json" | nindent 4 }}
+  hpa-dashboard.json: |
+    {{- .Files.Get "dashboards/hpa-dashboard.json" | nindent 4 }}
 {{- end }}
