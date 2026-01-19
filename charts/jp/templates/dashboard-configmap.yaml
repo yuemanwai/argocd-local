@@ -17,4 +17,6 @@ data:
     {{- .Files.Get "dashboards/hpa-dashboard.json" | replace "${DS_PROMETHEUS}" (.Values.dashboard.datasourceUid | default "prometheus") | nindent 4 }}
   argo-dashboard.json: |
     {{- .Files.Get "dashboards/argo-dashboard.json" | replace "${DS_PROMETHEUS}" (.Values.dashboard.datasourceUid | default "prometheus") | nindent 4 }}
+  flask-transaction.json: |
+    {{- .Files.Get "dashboards/flask-transaction.json" | replace "${DS_PROMETHEUS}" (.Values.dashboard.datasourceUid | default "prometheus") | nindent 4 }}
 {{- end }}
