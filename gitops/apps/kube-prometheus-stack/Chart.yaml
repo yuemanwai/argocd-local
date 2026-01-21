@@ -1,0 +1,11 @@
+apiVersion: v2
+name: kps-wrapper
+description: Wrapper chart for Kube Prometheus Stack
+type: application
+version: 1.0.0 # 這是你 Wrapper 自己的版本
+appVersion: "1.0.0"
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: 81.2.0 # 【鎖死】根據你剛才提到的版本
+    repository: https://prometheus-community.github.io/helm-charts
