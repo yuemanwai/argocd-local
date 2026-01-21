@@ -35,21 +35,19 @@ kube-prometheus-stack:
         jsonData:
           timeout: 60s
           maxLines: 1000
-          derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
-            - datasourceUid: tempo
-              matcherRegex: "traceID=(\\w+)"
-              name: TraceID
-              url: "$${__value.raw}"
+          # derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
+          #   - datasourceUid: tempo
+          #     matcherRegex: "traceID=(\\w+)"
+          #     name: TraceID
+          #     url: "$${__value.raw}"
   # 3. 大幅閹割 Prometheus
   prometheus:
     prometheusSpec:
       # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
-      storageSpec:
-        emptyDir:
-          medium: Memory
+      # storageSpec:
+      #   emptyDir:
+      #     medium: Memory
       retention: 6h
-
-      # 限制資源
       resources:
         limits:
           cpu: 500m
