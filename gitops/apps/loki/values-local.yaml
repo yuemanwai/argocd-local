@@ -14,7 +14,16 @@ loki:
     replicas: 0
   backend:
     replicas: 0
+
   # ==========================================
+  # === 新增：關閉 Cache 組件 ===
+  # 這些組件在 Local 單機版是 Overkill，關掉它們省 RAM
+  chunksCache:
+    enabled: false
+
+  resultsCache:
+    enabled: false
+  # ===========================
 
   # 這是給 SingleBinary 用的配置
   singleBinary:
