@@ -10,19 +10,22 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 
 spec:
-  # ignoreDifferences:
-  #   - group: apps
-  #     kind: StatefulSet
-  #     name: loki
-  #     jsonPointers:
-  #       - /spec/volumeClaimTemplates/0/apiVersion
-  #       - /spec/volumeClaimTemplates/0/kind
-  #       - /spec/template/spec/containers/0/resources
-  #   - group: apps
-  #     kind: DaemonSet
-  #     name: loki-stack-promtail
-  #     jsonPointers:
-  #       - /spec/template/spec/containers/0/resources
+  ignoreDifferences:
+    - group: apps
+      kind: DaemonSet
+      name: loki-canary
+      jqPathExpressions:
+        - .spec.template.spec.containers[].resources
+    - group: apps
+      kind: DaemonSet
+      name: loki-promtail 
+      jqPathExpressions:
+        - .spec.template.spec.containers[].resources
+    - group: apps
+      kind: StatefulSet
+      name: loki
+      jqPathExpressions:
+        - .spec.template.spec.containers[].resources
   
   project: default
   source:
