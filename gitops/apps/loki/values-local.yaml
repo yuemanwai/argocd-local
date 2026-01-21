@@ -1,36 +1,53 @@
 # gitops/apps/loki/values-local.yaml
 
-# 第一層：Wrapper Dependency Name (必須叫 loki)
+# 第一層：Wrapper Dependency Name (一定要叫 loki)
 loki:
   deploymentMode: SingleBinary
 
-  # 第二層：Loki Chart 內部的 Config
+  # ==========================================
+  # 【關鍵修正】明確將 Scalable 组件歸零
+  # 否則官方 Default 會係 3，導致 Validation 衝突
+  # ==========================================
+  read:
+    replicas: 0
+  write:
+    replicas: 0
+  backend:
+    replicas: 0
+  # ==========================================
+
+  # 這是給 SingleBinary 用的配置
+  singleBinary:
+    replicas: 1
+    persistence:
+      enabled: true
+      size: 10Gi
+
+  # Loki 核心配置
   loki:
     auth_enabled: false
-
     commonConfig:
       replication_factor: 1
 
-    # 【關鍵 1】雖然用 Filesystem，但照填 Bucket Name 塞住 Helm 把口
+    # 這裡照樣填 Dummy Bucket Name 騙過 Template Check
     storage:
       type: "filesystem"
       bucketNames:
-        chunks: "chunks" # 假的，不會真的用到 S3
+        chunks: "chunks"
         ruler: "ruler"
         admin: "admin"
 
-    # 【關鍵 2】明確定義 Schema，指向 filesystem
     schemaConfig:
       configs:
         - from: 2024-01-01
           store: tsdb
-          object_store: filesystem # 這裡才是真正決定存去邊
+          object_store: filesystem
           schema: v13
           index:
             prefix: index_
             period: 24h
 
-  # 關閉 Local 不需要的功能
+  # 關閉其他雜項
   minio:
     enabled: false
 
@@ -42,14 +59,7 @@ loki:
     lokiCanary:
       enabled: false
 
-  # 讓 Loki 有位寫 File (Local Persistence)
-  singleBinary:
-    replicas: 1
-    persistence:
-      enabled: true
-      size: 10Gi
-
-# Promtail 設定 (與 loki 同級)
+# Promtail 設定 (與 loki dependency 同級)
 promtail:
   enabled: true
   config:
