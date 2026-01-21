@@ -3,15 +3,18 @@
 # ArgoCD Cleanup Script - Complete cleanup of ArgoCD and all managed applications
 # 
 # This script will:
-# 1. Delete bootstrap configuration (bootstrap.yaml) to trigger ArgoCD cleanup cascade
-# 2. Wait for all applications to be deleted (ArgoCD handles this)
-# 3. Delete Git credentials secret
-# 4. Uninstall ArgoCD via Helm
-# 5. Clean up ArgoCD CRDs and namespace
-# 6. Clean up all managed application resources (deployments, services, etc)
-# 7. Clean up monitoring and other managed namespaces
-# 8. Clean up orphaned PVCs and PVs
-# 9. Clean up all finalizers and stuck resources
+# 1. Delete bootstrap configuration (root-app) to trigger ArgoCD cascade
+# 2. Wait for child Applications to disappear
+# 3. Force-remove Application finalizers (safety)
+# 4. Delete Git credentials secret
+# 5. Optionally uninstall the ArgoCD Helm release
+# 6. Delete ArgoCD CRDs
+# 7. Delete the argocd namespace (finalizers removed)
+# 8. Delete managed namespaces (monitoring/logging/loki)
+# 9. Clean the default namespace (deployments/statefulsets/HPAs/services/PVCs)
+# 10. Clean orphaned PVs and stuck resources (finalizers)
+# 11. Stop port-forwards
+# 12. Optionally stop Minikube
 #
 # Usage: ./cleanup-argocd.sh
 #
@@ -65,7 +68,7 @@ fi
 # =============================================================================
 # 1. Delete Bootstrap Configuration (triggers cascade deletion)
 # =============================================================================
-log_info "Step 1/6: Deleting root-app Application from Kubernetes..."
+log_info "Step 1/12: Deleting root-app Application from Kubernetes..."
 log_info "  (Using bootstrap/bootstrap.yaml manifest to remove the Application resource)"
 log_info "  This will trigger ArgoCD cascade deletion of all child applications"
 
@@ -82,7 +85,7 @@ fi
 # =============================================================================
 # 2. Wait for All Applications to Be Deleted
 # =============================================================================
-log_info "Step 2/6: Waiting for all applications to be cleaned up..."
+log_info "Step 2/12: Waiting for all applications to be cleaned up..."
 
 if kubectl get namespace argocd &>/dev/null; then
     # Wait for all applications to be deleted
@@ -109,9 +112,32 @@ fi
 sleep 2
 
 # =============================================================================
-# 3. Delete Git Credentials Secret
+# 3. Force-remove ArgoCD Application finalizers (safety)
 # =============================================================================
-log_info "Step 3/6: Deleting Git credentials secret..."
+log_info "Step 3/12: Forcing removal of finalizers on any remaining Applications..."
+
+if kubectl get applications --all-namespaces -o name >/dev/null 2>&1; then
+    kubectl get applications --all-namespaces -o json 2>/dev/null | \
+        jq -r '.items[] | select(.metadata.finalizers != null and (.metadata.finalizers | length > 0)) | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null | \
+        while read ns name; do
+            if [ -n "$ns" ] && [ -n "$name" ]; then
+                log_info "Removing finalizers from application $ns/$name"
+                kubectl patch application "$name" -n "$ns" --type json -p='[{"op":"remove","path":"/metadata/finalizers"}]' 2>/dev/null || true
+            fi
+        done
+
+    # Attempt to delete any remaining Application resources cluster-wide
+    kubectl delete applications --all --all-namespaces --wait=false 2>/dev/null || true
+else
+    log_info "No Application resources found"
+fi
+
+sleep 2
+
+# =============================================================================
+# 4. Delete Git Credentials Secret
+# =============================================================================
+log_info "Step 4/12: Deleting Git credentials secret..."
 
 if [ -f "bootstrap/repo-secret/git-creds.yaml" ]; then
     log_info "Deleting Git credentials from bootstrap/repo-secret/git-creds.yaml..."
@@ -126,9 +152,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 4. Uninstall ArgoCD via Helm (optional)
+# 5. Uninstall ArgoCD via Helm (optional)
 # =============================================================================
-log_info "Step 4/6: ArgoCD Helm release"
+log_info "Step 5/12: ArgoCD Helm release"
 
 if helm list -n argocd 2>/dev/null | grep -q "^argocd\b"; then
     read -p "Uninstall ArgoCD Helm release now? (y/N): " -n 1 -r
@@ -147,9 +173,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 5. Delete ArgoCD CRDs
+# 6. Delete ArgoCD CRDs
 # =============================================================================
-log_info "Step 5/6: Deleting ArgoCD CRDs..."
+log_info "Step 6/12: Deleting ArgoCD CRDs..."
 
 ARGOCD_CRDS=$(kubectl get crd -o name 2>/dev/null | grep -E 'argoproj.io' | wc -l)
 if [ "$ARGOCD_CRDS" -gt 0 ]; then
@@ -166,9 +192,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 6. Delete ArgoCD Namespace and Resources
+# 7. Delete ArgoCD Namespace and Resources
 # =============================================================================
-log_info "Step 6/6: Deleting ArgoCD namespace..."
+log_info "Step 7/12: Deleting ArgoCD namespace..."
 
 if kubectl get namespace argocd &>/dev/null; then
     # Remove finalizers from namespace
@@ -186,9 +212,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 7. Clean up managed namespaces (monitoring, logging, etc)
+# 8. Clean up managed namespaces (monitoring, logging, etc)
 # =============================================================================
-log_info "Step 7/9: Cleaning up managed namespaces..."
+log_info "Step 8/12: Cleaning up managed namespaces..."
 
 MANAGED_NAMESPACES=("monitoring" "logging" "loki")
 for ns in "${MANAGED_NAMESPACES[@]}"; do
@@ -205,9 +231,9 @@ log_info "Waiting for managed namespaces to be deleted..."
 sleep 5
 
 # =============================================================================
-# 8. Clean up resources in default namespace
+# 9. Clean up resources in default namespace
 # =============================================================================
-log_info "Step 8/9: Cleaning up resources in default namespace..."
+log_info "Step 9/12: Cleaning up resources in default namespace..."
 
 # Delete all deployments managed by ArgoCD
 log_info "Removing ArgoCD-managed deployments from default namespace..."
@@ -236,9 +262,9 @@ log_success "Default namespace cleanup initiated"
 sleep 2
 
 # =============================================================================
-# 9. Clean up orphaned PVs and other resources
+# 10. Clean up orphaned PVs and other resources
 # =============================================================================
-log_info "Step 9/9: Cleaning up orphaned resources..."
+log_info "Step 10/12: Cleaning up orphaned resources..."
 
 # Remove ArgoCD ClusterRoles and ClusterRoleBindings
 log_info "Removing ArgoCD ClusterRoles..."
@@ -298,9 +324,9 @@ kubectl get all --all-namespaces -o json 2>/dev/null | \
 log_success "Orphaned resources cleaned up"
 
 # =============================================================================
-# 10. Stop port forwards
+# 11. Stop port forwards
 # =============================================================================
-log_info "Stopping all port forwards..."
+log_info "Step 11/12: Stopping all port forwards..."
 if [ -f "./port-forward.sh" ]; then
     ./port-forward.sh stop 2>/dev/null || log_info "Port forwards already stopped or script not found"
 else
@@ -308,8 +334,9 @@ else
 fi
 
 # =============================================================================
-# 11. Stop Minikube (optional)
+# 12. Stop Minikube (optional)
 # =============================================================================
+log_info "Step 12/12: Minikube status check"
 if command -v minikube >/dev/null 2>&1; then
     if minikube status >/dev/null 2>&1; then
         read -p "Stop Minikube now? (y/N): " -n 1 -r
@@ -320,7 +347,11 @@ if command -v minikube >/dev/null 2>&1; then
         else
             log_info "Keeping Minikube running"
         fi
+    else
+        log_info "Minikube not running"
     fi
+else
+    log_info "Minikube not installed"
 fi
 
 # =============================================================================
@@ -331,7 +362,7 @@ log_success "==================== CLEANUP COMPLETE ===================="
 echo ""
 log_success "ArgoCD and all managed applications have been completely removed"
 echo ""
-log_info "Cleanup flow summary (10 steps):"
+log_info "Cleanup flow summary (12 steps):"
 log_info "  ✓ Root-app Application deleted from Kubernetes (triggered cascade)"
 log_info "  ✓ All child applications deleted by ArgoCD cascade"
 log_info "  ✓ Git credentials secret deleted"
@@ -342,6 +373,7 @@ log_info "  ✓ Default namespace cleaned (deployments, statefulsets, HPAs, serv
 log_info "  ✓ Orphaned PVs cleaned up"
 log_info "  ✓ Stuck resources with finalizers removed"
 log_info "  ✓ Port forwards stopped"
+log_info "  ✓ Minikube stopped (if chosen)"
 echo ""
 log_info "Verification commands:"
 log_info "  - Check all resources: ${YELLOW}kubectl get all --all-namespaces${NC}"
@@ -349,7 +381,7 @@ log_info "  - Check PVCs: ${YELLOW}kubectl get pvc --all-namespaces${NC}"
 log_info "  - Check PVs: ${YELLOW}kubectl get pv${NC}"
 log_info "  - Check namespaces: ${YELLOW}kubectl get ns${NC}"
 echo ""
-log_warning "Note: Minikube cluster is still running. To stop it:"
+log_warning "If Minikube is still running and you want to stop it manually:"
 log_info "  ${YELLOW}minikube stop${NC}"
 echo ""
 log_info "To reinstall ArgoCD with the App of Apps pattern:"

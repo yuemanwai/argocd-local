@@ -2,6 +2,5 @@
 spec:
   source:
     repoURL: https://github.com/yuemanwai/argocd-local.git
-    targetRevision: HEAD
   destination:
     server: https://kubernetes.default.svc
