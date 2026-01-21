@@ -1143,7 +1143,7 @@ gateway:
             matchLabels:
               app.kubernetes.io/component: gateway
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- DNS config for gateway pods
   dnsConfig: {}
@@ -1513,7 +1513,7 @@ singleBinary:
             matchLabels:
               app.kubernetes.io/component: single-binary
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Topology Spread Constraints for single binary pods
   # The value will be passed through tpl.
@@ -1660,7 +1660,7 @@ write:
             matchLabels:
               app.kubernetes.io/component: write
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- DNS config for write pods
   dnsConfig: {}
@@ -1799,7 +1799,7 @@ read:
             matchLabels:
               app.kubernetes.io/component: read
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- DNS config for read pods
   dnsConfig: {}
@@ -1926,7 +1926,7 @@ backend:
             matchLabels:
               app.kubernetes.io/component: backend
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- DNS config for backend pods
   dnsConfig: {}
@@ -2072,7 +2072,7 @@ ingester:
         matchLabels:
           app.kubernetes.io/component: ingester
           app.kubernetes.io/name: '{{ include "loki.name" . }}'
-          app.kubernetes.io/instance: '{{ .Release.Name }}'
+          app.kubernetes.io/instance: "{{ .Release.Name }}"
   # -- Affinity for ingester pods. Ignored if zoneAwareReplication is enabled.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2083,7 +2083,7 @@ ingester:
             matchLabels:
               app.kubernetes.io/component: ingester
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
@@ -2281,7 +2281,7 @@ distributor:
             matchLabels:
               app.kubernetes.io/component: distributor
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -2388,7 +2388,7 @@ querier:
         matchLabels:
           app.kubernetes.io/component: querier
           app.kubernetes.io/name: '{{ include "loki.name" . }}'
-          app.kubernetes.io/instance: '{{ .Release.Name }}'
+          app.kubernetes.io/instance: "{{ .Release.Name }}"
   # -- Affinity for querier pods.
   # @default -- Hard node anti-affinity
   # The value will be passed through tpl.
@@ -2399,7 +2399,7 @@ querier:
             matchLabels:
               app.kubernetes.io/component: querier
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -2504,7 +2504,7 @@ queryFrontend:
             matchLabels:
               app.kubernetes.io/component: query-frontend
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -2584,7 +2584,7 @@ queryScheduler:
             matchLabels:
               app.kubernetes.io/component: query-scheduler
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: 1
@@ -2664,7 +2664,7 @@ indexGateway:
             matchLabels:
               app.kubernetes.io/component: index-gateway
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -2753,7 +2753,7 @@ compactor:
             matchLabels:
               app.kubernetes.io/component: compactor
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Labels for compactor service
   serviceLabels: {}
@@ -2871,7 +2871,7 @@ bloomGateway:
             matchLabels:
               app.kubernetes.io/component: bloom-gateway
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Labels for bloom-gateway service
   serviceLabels: {}
@@ -2989,7 +2989,7 @@ bloomPlanner:
             matchLabels:
               app.kubernetes.io/component: bloom-planner
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Labels for bloom-planner service
   serviceLabels: {}
@@ -3156,7 +3156,7 @@ bloomBuilder:
             matchLabels:
               app.kubernetes.io/component: bloom-builder
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -3207,7 +3207,7 @@ patternIngester:
             matchLabels:
               app.kubernetes.io/component: pattern-ingester
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -3360,7 +3360,7 @@ ruler:
             matchLabels:
               app.kubernetes.io/component: ruler
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -3527,7 +3527,7 @@ overridesExporter:
             matchLabels:
               app.kubernetes.io/component: overrides-exporter
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- Pod Disruption Budget maxUnavailable
   maxUnavailable: null
@@ -4378,7 +4378,7 @@ tableManager:
             matchLabels:
               app.kubernetes.io/component: table-manager
               app.kubernetes.io/name: '{{ include "loki.name" . }}'
-              app.kubernetes.io/instance: '{{ .Release.Name }}'
+              app.kubernetes.io/instance: "{{ .Release.Name }}"
           topologyKey: kubernetes.io/hostname
   # -- DNS config table-manager pods
   dnsConfig: {}
@@ -4390,4 +4390,3 @@ tableManager:
   retention_deletes_enabled: false
   # -- Set retention period
   retention_period: 0
-
