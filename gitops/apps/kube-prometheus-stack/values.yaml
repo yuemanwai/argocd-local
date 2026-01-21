@@ -1,72 +1,71 @@
-# local-values.yaml - 專為 Notebook 而設的貧窮版監控
+kube-prometheus-stack:
+  # 1. 關閉 Alertmanager (你自己做 Lab 唔洗發 Alert Email，慳好多 RAM)
+  alertmanager:
+    enabled: false
 
-# 1. 關閉 Alertmanager (你自己做 Lab 唔洗發 Alert Email，慳好多 RAM)
-alertmanager:
-  enabled: false
-
-# 2. 將 Grafana 變輕
-grafana:
-  enabled: true
-  resources:
-    limits:
-      cpu: 300m
-      memory: 1024Mi
-    requests:
-      cpu: 100m
-      memory: 512Mi
-  sidecar:
-    dashboards:
-      enabled: true
-      label: grafana_dashboard
-      searchNamespace: ALL # 掃描所有 namespace
-      resources:
-        limits:
-          memory: 512Mi
-          cpu: 100m
-        requests:
-          memory: 256Mi
-          cpu: 50m
-  additionalDataSources:
-    - name: Loki
-      type: loki
-      uid: loki
-      url: http://loki-loki.monitoring.svc.cluster.local:3100
-      access: proxy
-      isDefault: false
-      jsonData:
-        timeout: 60s
-        maxLines: 1000
-        derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
-          - datasourceUid: tempo
-            matcherRegex: "traceID=(\\w+)"
-            name: TraceID
-            url: "$${__value.raw}"
-# 3. 大幅閹割 Prometheus
-prometheus:
-  prometheusSpec:
-    # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
-    storageSpec:
-      emptyDir:
-        medium: Memory
-    retention: 6h
-
-    # 限制資源
+  # 2. 將 Grafana 變輕
+  grafana:
+    enabled: true
     resources:
       limits:
-        cpu: 500m
+        cpu: 300m
         memory: 1024Mi
       requests:
         cpu: 100m
         memory: 512Mi
+    sidecar:
+      dashboards:
+        enabled: true
+        label: grafana_dashboard
+        searchNamespace: ALL # 掃描所有 namespace
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 100m
+          requests:
+            memory: 256Mi
+            cpu: 50m
+    additionalDataSources:
+      - name: Loki
+        type: loki
+        uid: loki
+        url: http://loki-loki.monitoring.svc.cluster.local:3100
+        access: proxy
+        isDefault: false
+        jsonData:
+          timeout: 60s
+          maxLines: 1000
+          derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
+            - datasourceUid: tempo
+              matcherRegex: "traceID=(\\w+)"
+              name: TraceID
+              url: "$${__value.raw}"
+  # 3. 大幅閹割 Prometheus
+  prometheus:
+    prometheusSpec:
+      # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
+      storageSpec:
+        emptyDir:
+          medium: Memory
+      retention: 6h
 
-# 4. 關閉一堆你暫時用唔著嘅 K8s 元件監控 (慳資源)
-kubeControllerManager:
-  enabled: false
-kubeEtcd:
-  enabled: false
-kubeScheduler:
-  enabled: false
-coreDns:
-  enabled: false
-kubeProxy:
-  enabled: false
+      # 限制資源
+      resources:
+        limits:
+          cpu: 500m
+          memory: 1024Mi
+        requests:
+          cpu: 100m
+          memory: 512Mi
+
+  # 4. 關閉一堆你暫時用唔著嘅 K8s 元件監控 (慳資源)
+  kubeControllerManager:
+    enabled: false
+  kubeEtcd:
+    enabled: false
+  kubeScheduler:
+    enabled: false
+  coreDns:
+    enabled: false
+  kubeProxy:
+    enabled: false
