@@ -63,7 +63,7 @@ start_forwards() {
     # ArgoCD
     if ! pgrep -f "port-forward.*argocd-server" >/dev/null 2>&1; then
         kubectl port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
-        ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath "{.data.password}" 2>/dev/null | base64 -d)
+        ARGOCD_PASSWORD=$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' 2>/dev/null | base64 -d)
         log_success "ArgoCD: https://localhost:8090"
         echo -e "  ${YELLOW}Username:${NC} admin"
         echo -e "  ${YELLOW}Password:${NC} $ARGOCD_PASSWORD"
@@ -85,7 +85,7 @@ start_forwards() {
     if kubectl get namespace monitoring &>/dev/null; then
         if ! pgrep -f "port-forward.*grafana" >/dev/null 2>&1; then
             kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
-            GRAFANA_PASSWORD=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath "{.data.admin-password}" 2>/dev/null | base64 -d)
+            GRAFANA_PASSWORD=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' 2>/dev/null | base64 -d)
             log_success "Grafana: http://localhost:3000"
             echo -e "  ${YELLOW}Username:${NC} admin"
             echo -e "  ${YELLOW}Password:${NC} $GRAFANA_PASSWORD"
