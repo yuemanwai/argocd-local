@@ -32,7 +32,7 @@ grafana:
       uid: loki
       url: http://loki-loki.monitoring.svc.cluster.local:3100
       access: proxy
-      isDefault: true
+      isDefault: false
       jsonData:
         timeout: 60s
         maxLines: 1000
