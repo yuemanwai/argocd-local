@@ -13,23 +13,40 @@ spec:
   ignoreDifferences:
     - group: admissionregistration.k8s.io
       kind: MutatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/clientConfig/caBundle
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
+      # jsonPointers:
+      #   - /webhooks/0/clientConfig/caBundle
     - group: admissionregistration.k8s.io
       kind: ValidatingWebhookConfiguration
-      jsonPointers:
-        - /webhooks/0/clientConfig/caBundle
+      name: kube-prometheus-stack-admission
+      jqPathExpressions:
+        - .webhooks[].clientConfig.caBundle
+    # - group: apps
+    #   kind: DaemonSet
+    #   name: kube-prometheus-stack-prometheus-node-exporter
+    #   jsonPointers:
+    #     - /spec/template/spec/containers/0/resources
+    # - group: apps
+    #   kind: Deployment
+    #   name: kube-prometheus-stack-grafana
+    #   jsonPointers:
+    #     - /spec/template/spec/containers/0/resources
+    #     - /spec/template/spec/containers/1/resources
+    # Node Exporter (DaemonSet)
     - group: apps
       kind: DaemonSet
       name: kube-prometheus-stack-prometheus-node-exporter
-      jsonPointers:
-        - /spec/template/spec/containers/0/resources
+      jqPathExpressions:
+        - .spec.template.spec.containers[].resources
+        
+    # Grafana (Deployment)
     - group: apps
       kind: Deployment
       name: kube-prometheus-stack-grafana
-      jsonPointers:
-        - /spec/template/spec/containers/0/resources
-        - /spec/template/spec/containers/1/resources
+      jqPathExpressions:
+        - .spec.template.spec.containers[].resources
+
   project: default
 
   source:
