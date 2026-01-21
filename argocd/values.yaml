@@ -24,9 +24,6 @@ server:
       enabled: true
       additionalLabels:
         release: prometheus
-  # # 如果你想用 NodePort 直接 Access (唔洗 port-forward)
-  # service:
-  #   type: NodePort
 
 repoServer:
   replicas: 1

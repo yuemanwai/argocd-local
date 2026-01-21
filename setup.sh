@@ -82,7 +82,7 @@ if kubectl get namespace argocd &>/dev/null && helm list -n argocd 2>/dev/null |
         log_info "Upgrading ArgoCD..."
         helm upgrade --install argocd argo/argo-cd \
             --namespace argocd \
-            --values ./infrastructure/argocd/values.yaml \
+            --values ./argocd/values.yaml \
             --atomic
         log_success "ArgoCD upgraded successfully"
     else
@@ -93,7 +93,7 @@ else
     helm install argocd argo/argo-cd \
         --namespace argocd \
         --create-namespace \
-        --values ./infrastructure/argocd/values.yaml \
+        --values ./argocd/values.yaml \
         --version 5.51.6 \
         --wait
     log_success "ArgoCD installed successfully"
@@ -103,13 +103,24 @@ fi
 wait_for_namespace argocd
 
 # =============================================================================
-# 3. Deploy Applications
+# 3. Deploy Root Application (App of Apps pattern)
 # =============================================================================
-log_info "Deploying applications via ArgoCD..."
-kubectl apply -f bootstrap/ -R 2>/dev/null || log_warning "Bootstrap already applied or failed"
+log_info "Deploying Root Application via ArgoCD (App of Apps pattern)..."
 
-log_info "Waiting for applications to sync..."
-sleep 15
+# First, apply git repository secret
+if [ -f "bootstrap/repo-secret/git-creds.yaml" ]; then
+    log_info "Applying Git credentials..."
+    kubectl apply -f bootstrap/repo-secret/git-creds.yaml 2>/dev/null || log_warning "Git credentials already applied"
+else
+    log_warning "Git credentials not found at bootstrap/repo-secret/git-creds.yaml"
+fi
+
+# Then deploy the root-app bootstrap
+log_info "Applying root-app bootstrap..."
+kubectl apply -f bootstrap/bootstrap.yaml 2>/dev/null || log_warning "Bootstrap already applied"
+
+log_info "Waiting for applications to sync (30 seconds)..."
+sleep 30
 
 # =============================================================================
 # 4. Get Passwords
@@ -170,12 +181,16 @@ fi
 log_info "Port-forwarding ArgoCD (https://localhost:8090)..."
 kubectl port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
 
-# Application (wait for it to be ready first)
-log_info "Waiting for application to be ready..."
-kubectl wait --for=condition=Ready pod -l component=app -n default --timeout=300s 2>/dev/null || log_warning "App pods not ready yet"
-
-log_info "Port-forwarding Application (http://localhost:8080)..."
-kubectl port-forward service/my-app-jp 8080:5000 -n default > /dev/null 2>&1 &
+# Application (wait for it to be ready first, if deployed)
+if kubectl get service my-app-jp -n default &>/dev/null; then
+    log_info "Waiting for application to be ready..."
+    kubectl wait --for=condition=Ready pod -l component=app -n default --timeout=300s 2>/dev/null || log_warning "App pods not ready yet"
+    
+    log_info "Port-forwarding Application (http://localhost:8080)..."
+    kubectl port-forward service/my-app-jp 8080:5000 -n default > /dev/null 2>&1 &
+else
+    log_info "Application service not found (may not be deployed yet)"
+fi
 
 # Grafana (if monitoring exists)
 if kubectl get namespace monitoring &>/dev/null; then

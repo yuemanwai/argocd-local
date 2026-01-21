@@ -1,10 +1,13 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/application-crd.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: loki-stack
-  namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+
 spec:
   ignoreDifferences:
     - group: apps
@@ -19,6 +22,7 @@ spec:
       name: loki-stack-promtail
       jsonPointers:
         - /spec/template/spec/containers/0/resources
+  
   project: default
   sources:
     - repoURL: https://grafana.github.io/helm-charts
@@ -26,14 +30,15 @@ spec:
       targetRevision: 2.10.3
       helm:
         valueFiles:
-          - $argocd-local/infrastructure/monitoring/loki-stack-values.yaml
-
-    - repoURL: https://github.com/yuemanwai/argocd-local.git
+          - $my-repo/gitops/apps/loki/values.yaml
+    - repoURL: {{ .Values.spec.source.repoURL }}
       targetRevision: HEAD
-      ref: argocd-local
+      ref: my-repo
+ 
   destination:
-    server: https://kubernetes.default.svc
+    server: {{ .Values.spec.destination.server }}
     namespace: monitoring
+  
   syncPolicy:
     automated:
       prune: true

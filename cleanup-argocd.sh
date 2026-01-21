@@ -41,11 +41,12 @@ echo ""
 log_warning "==================== WARNING ===================="
 log_warning "This script will DELETE ArgoCD and ALL managed applications!"
 log_warning "This includes:"
-log_warning "  - All ArgoCD Applications"
+log_warning "  - Root Application (root-app)"
+log_warning "  - All child Applications (kps, loki, my-app, etc)"
 log_warning "  - ArgoCD Helm release"
 log_warning "  - ArgoCD CRDs"
 log_warning "  - ArgoCD namespace and secrets"
-log_warning "  - Managed application resources"
+log_warning "  - All managed application resources"
 log_warning "=================================================="
 echo ""
 read -p "Are you sure you want to continue? (yes/no): " -r
@@ -56,9 +57,29 @@ if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
 fi
 
 # =============================================================================
-# 1. Delete ArgoCD Applications
+# 1. Delete Root Application (App of Apps)
 # =============================================================================
-log_info "Step 1/5: Deleting ArgoCD applications..."
+log_info "Step 1/6: Deleting Root Application (root-app)..."
+
+if kubectl get namespace argocd &>/dev/null; then
+    if kubectl get application root-app -n argocd &>/dev/null; then
+        log_info "Removing finalizers from root-app"
+        kubectl patch application root-app -n argocd --type json -p='[{"op": "remove", "path": "/metadata/finalizers"}]' 2>/dev/null || true
+        
+        log_info "Deleting root-app..."
+        kubectl delete application root-app -n argocd --wait=false 2>/dev/null || true
+        log_success "Root application deletion initiated"
+    else
+        log_info "Root application (root-app) not found"
+    fi
+fi
+
+sleep 2
+
+# =============================================================================
+# 2. Delete Child Applications
+# =============================================================================
+log_info "Step 2/6: Deleting child applications..."
 
 if kubectl get namespace argocd &>/dev/null; then
     APPS=$(kubectl get applications -n argocd -o name 2>/dev/null | wc -l)
@@ -86,9 +107,9 @@ fi
 sleep 3
 
 # =============================================================================
-# 2. Uninstall ArgoCD via Helm
+# 3. Uninstall ArgoCD via Helm
 # =============================================================================
-log_info "Step 2/5: Uninstalling ArgoCD Helm release..."
+log_info "Step 3/6: Uninstalling ArgoCD Helm release..."
 
 if helm list -n argocd 2>/dev/null | grep -q argocd; then
     log_info "Uninstalling ArgoCD Helm release..."
@@ -101,9 +122,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 3. Delete ArgoCD CRDs
+# 4. Delete ArgoCD CRDs
 # =============================================================================
-log_info "Step 3/5: Deleting ArgoCD CRDs..."
+log_info "Step 4/6: Deleting ArgoCD CRDs..."
 
 ARGOCD_CRDS=$(kubectl get crd -o name 2>/dev/null | grep -E 'argoproj.io' | wc -l)
 if [ "$ARGOCD_CRDS" -gt 0 ]; then
@@ -120,9 +141,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 4. Delete ArgoCD Namespace and Resources
+# 5. Delete ArgoCD Namespace and Resources
 # =============================================================================
-log_info "Step 4/5: Deleting ArgoCD namespace..."
+log_info "Step 5/6: Deleting ArgoCD namespace..."
 
 if kubectl get namespace argocd &>/dev/null; then
     # Remove finalizers from namespace
@@ -140,9 +161,9 @@ fi
 sleep 2
 
 # =============================================================================
-# 5. Clean up leftover resources
+# 6. Clean up leftover resources
 # =============================================================================
-log_info "Step 5/5: Cleaning up leftover resources..."
+log_info "Step 6/6: Cleaning up leftover resources..."
 
 # Remove ArgoCD ClusterRoles and ClusterRoleBindings
 log_info "Removing ArgoCD ClusterRoles..."

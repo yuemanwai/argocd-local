@@ -37,16 +37,17 @@ show_status() {
         return
     fi
     
-    echo -e "${BLUE}PID     PORT    SERVICE${NC}"
-    echo "-----------------------------------------------------------"
+    echo -e "${BLUE}PID     PORT    SERVICE                NAMESPACE${NC}"
+    echo "-------------------------------------------------------------------"
     
     ps aux | grep -E "port-forward" | grep -v grep | while read -r line; do
         pid=$(echo "$line" | awk '{print $2}')
         service=$(echo "$line" | grep -o "service/[^ ]*" | cut -d'/' -f2)
         port=$(echo "$line" | grep -o "[0-9]\+:[0-9]\+" | cut -d':' -f1)
+        namespace=$(echo "$line" | grep -oP '(?<= -n )[^ ]+' | head -1)
         
         if [ -n "$service" ] && [ -n "$port" ]; then
-            echo -e "${GREEN}$pid${NC}     ${YELLOW}$port${NC}    $service"
+            printf "${GREEN}%-7s${NC} ${YELLOW}%-7s${NC} %-24s %s\n" "$pid" "$port" "$service" "${namespace:-default}"
         fi
     done
     
@@ -62,7 +63,7 @@ start_forwards() {
     # ArgoCD
     if ! pgrep -f "port-forward.*argocd-server" >/dev/null 2>&1; then
         kubectl port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
-        ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" 2>/dev/null | base64 -d)
+        ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath "{.data.password}" 2>/dev/null | base64 -d)
         log_success "ArgoCD: https://localhost:8090"
         echo -e "  ${YELLOW}Username:${NC} admin"
         echo -e "  ${YELLOW}Password:${NC} $ARGOCD_PASSWORD"
@@ -70,21 +71,21 @@ start_forwards() {
         log_info "ArgoCD port-forward already running"
     fi
     
-    # Application
+    # Application (my-app-jp)
     if kubectl get service my-app-jp -n default &>/dev/null; then
         if ! pgrep -f "port-forward.*my-app-jp" >/dev/null 2>&1; then
             kubectl port-forward service/my-app-jp 8080:5000 -n default > /dev/null 2>&1 &
-            log_success "Application: http://localhost:8080"
+            log_success "Application (my-app-jp): http://localhost:8080"
         else
-            log_info "Application port-forward already running"
+            log_info "Application (my-app-jp) port-forward already running"
         fi
     fi
     
-    # Grafana
+    # Grafana (from kube-prometheus-stack)
     if kubectl get namespace monitoring &>/dev/null; then
         if ! pgrep -f "port-forward.*grafana" >/dev/null 2>&1; then
             kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
-            GRAFANA_PASSWORD=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath="{.data.admin-password}" 2>/dev/null | base64 -d)
+            GRAFANA_PASSWORD=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath "{.data.admin-password}" 2>/dev/null | base64 -d)
             log_success "Grafana: http://localhost:3000"
             echo -e "  ${YELLOW}Username:${NC} admin"
             echo -e "  ${YELLOW}Password:${NC} $GRAFANA_PASSWORD"
