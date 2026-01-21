@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: loki-stack
+  name: loki
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,31 +10,25 @@ metadata:
     argocd.argoproj.io/sync-wave: "1"
 
 spec:
-  ignoreDifferences:
-    - group: apps
-      kind: StatefulSet
-      name: loki-stack # 指名道姓只無視 loki-stack
-      jsonPointers:
-        - /spec/volumeClaimTemplates/0/apiVersion
-        - /spec/volumeClaimTemplates/0/kind
-        - /spec/template/spec/containers/0/resources
-    - group: apps
-      kind: DaemonSet
-      name: loki-stack-promtail
-      jsonPointers:
-        - /spec/template/spec/containers/0/resources
+  # ignoreDifferences:
+  #   - group: apps
+  #     kind: StatefulSet
+  #     name: loki
+  #     jsonPointers:
+  #       - /spec/volumeClaimTemplates/0/apiVersion
+  #       - /spec/volumeClaimTemplates/0/kind
+  #       - /spec/template/spec/containers/0/resources
+  #   - group: apps
+  #     kind: DaemonSet
+  #     name: loki-stack-promtail
+  #     jsonPointers:
+  #       - /spec/template/spec/containers/0/resources
   
   project: default
   sources:
-    - repoURL: https://grafana.github.io/helm-charts
-      chart: loki-stack
-      targetRevision: 2.10.3
-      helm:
-        valueFiles:
-          - $my-repo/gitops/apps/loki/values.yaml
-    - repoURL: {{ .Values.spec.source.repoURL }}
+    repoURL: {{ .Values.spec.source.repoURL }}
+    path: gitops/apps/loki
       targetRevision: HEAD
-      ref: my-repo
  
   destination:
     server: {{ .Values.spec.destination.server }}

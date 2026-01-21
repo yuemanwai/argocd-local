@@ -126,14 +126,20 @@ fi
 sleep 2
 
 # =============================================================================
-# 4. Uninstall ArgoCD via Helm
+# 4. Uninstall ArgoCD via Helm (optional)
 # =============================================================================
-log_info "Step 4/6: Uninstalling ArgoCD Helm release..."
+log_info "Step 4/6: ArgoCD Helm release"
 
-if helm list -n argocd 2>/dev/null | grep -q argocd; then
-    log_info "Uninstalling ArgoCD Helm release..."
-    helm uninstall argocd -n argocd --wait 2>/dev/null || log_warning "Helm uninstall failed, continuing..."
-    log_success "ArgoCD Helm release removed"
+if helm list -n argocd 2>/dev/null | grep -q "^argocd\b"; then
+    read -p "Uninstall ArgoCD Helm release now? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Uninstalling ArgoCD Helm release..."
+        helm uninstall argocd -n argocd --wait 2>/dev/null || log_warning "Helm uninstall failed, continuing..."
+        log_success "ArgoCD Helm release removed"
+    else
+        log_info "Skipping ArgoCD Helm uninstall"
+    fi
 else
     log_info "ArgoCD Helm release not found"
 fi
@@ -299,6 +305,22 @@ if [ -f "./port-forward.sh" ]; then
     ./port-forward.sh stop 2>/dev/null || log_info "Port forwards already stopped or script not found"
 else
     pkill -f "port-forward" 2>/dev/null || true
+fi
+
+# =============================================================================
+# 11. Stop Minikube (optional)
+# =============================================================================
+if command -v minikube >/dev/null 2>&1; then
+    if minikube status >/dev/null 2>&1; then
+        read -p "Stop Minikube now? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Stopping Minikube..."
+            minikube stop || log_warning "Failed to stop Minikube"
+        else
+            log_info "Keeping Minikube running"
+        fi
+    fi
 fi
 
 # =============================================================================

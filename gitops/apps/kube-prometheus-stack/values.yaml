@@ -29,12 +29,18 @@ grafana:
   additionalDataSources:
     - name: Loki
       type: loki
-      url: http://loki-stack.monitoring.svc.cluster.local:3100
+      uid: loki
+      url: http://loki-loki.monitoring.svc.cluster.local:3100
       access: proxy
-      isDefault: false
+      isDefault: true
       jsonData:
-        timeout: 60
+        timeout: 60s
         maxLines: 1000
+        derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
+          - datasourceUid: tempo
+            matcherRegex: "traceID=(\\w+)"
+            name: TraceID
+            url: "$${__value.raw}"
 # 3. 大幅閹割 Prometheus
 prometheus:
   prometheusSpec:

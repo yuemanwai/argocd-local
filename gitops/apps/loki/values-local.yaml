@@ -1,0 +1,42 @@
+# ===========================
+# Section 1: Loki (Server)
+# ===========================
+loki:
+  deploymentMode: SingleBinary # Local 必用！單機模式，慳資源
+
+  loki:
+    auth_enabled: false
+    commonConfig:
+      replication_factor: 1 # Local 得單 Node，必須係 1
+    storage:
+      type: "filesystem" # Local 唔用 S3，直接寫 Disk
+    schemaConfig:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem # 配合上面
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+  # 關閉不需要的功能以節省資源
+  minio:
+    enabled: false
+  monitoring:
+    selfMonitoring:
+      enabled: false
+      grafanaAgent:
+        installOperator: false
+
+# ===========================
+# Section 2: Promtail (Agent)
+# ===========================
+promtail:
+  enabled: true
+  config:
+    clients:
+      # 【重點】這裡要指返去 Loki 嘅 Service Address
+      # 格式通常係: http://<release-name>-loki:3100/loki/api/v1/push
+      # 假設你 ArgoCD App 名叫 "loki"，Helm release name 就會係 "loki" (除非你改左)
+      - url: http://loki-loki:3100/loki/api/v1/push

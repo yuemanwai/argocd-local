@@ -1,0 +1,12 @@
+apiVersion: v2
+name: loki-wrapper
+description: My Custom Logging Stack (Loki + Promtail)
+type: application
+version: 1.0.0
+dependencies:
+  - name: loki
+    version: 6.49.0 # 建議鎖定版本 (check 返最新 stable version)
+    repository: https://grafana.github.io/helm-charts
+  - name: promtail # 順手包埋 promtail，因為轉左 loki chart 之後會無左 promtail
+    version: 6.17.1
+    repository: https://grafana.github.io/helm-charts
