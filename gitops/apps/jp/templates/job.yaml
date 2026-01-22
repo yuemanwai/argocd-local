@@ -17,10 +17,16 @@ spec:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         command: ["/bin/sh", "-c", "python init_db.py && python test_data.py"]
-        envFrom:
-          - configMapRef:
-              name: {{ include "jp.fullname" . }} # 讀取你的 App config
-          - secretRef:
-              name: {{ include "jp.fullname" . }} # 讀取你的 RDS 密碼
+        env:
+          - name: DB_HOST
+            value: {{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
+          - name: DB_PORT
+            value: "{{ .Values.database.port | quote }}"
+          - name: DB_NAME
+            value: "{{ .Values.database.name | quote }}"
+          - name: DB_USERNAME
+            value: "{{ .Values.database.username | quote }}"
+          - name: DB_PASSWORD
+            value: "{{ .Values.database.password | quote }}"
       restartPolicy: OnFailure
       imagePullPolicy: IfNotPresent
