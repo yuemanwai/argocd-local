@@ -35,11 +35,7 @@ kube-prometheus-stack:
         jsonData:
           timeout: 60s
           maxLines: 1000
-          # derivedFields: # (Optional) 進階野：將 Log 裡面的 TraceID 變做 Link 跳去 Tempo
-          #   - datasourceUid: tempo
-          #     matcherRegex: "traceID=(\\w+)"
-          #     name: TraceID
-          #     url: "$${__value.raw}"
+
   # 3. 大幅閹割 Prometheus
   prometheus:
     prometheusSpec:
