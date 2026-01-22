@@ -21,12 +21,12 @@ spec:
           - name: DB_HOST
             value: {{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
           - name: DB_PORT
-            value: "{{ .Values.database.port | quote }}"
+            value: "{{ .Values.database.port }}"
           - name: DB_NAME
-            value: "{{ .Values.database.name | quote }}"
+            value: "{{ .Values.database.name }}"
           - name: DB_USERNAME
-            value: "{{ .Values.database.username | quote }}"
+            value: "{{ .Values.database.username }}"
           - name: DB_PASSWORD
-            value: "{{ .Values.database.password | quote }}"
+            value: "{{ .Values.database.password }}"
       restartPolicy: OnFailure
       imagePullPolicy: IfNotPresent
