@@ -13,9 +13,11 @@ spec:
   ttlSecondsAfterFinished: 60
   template:
     spec:
+      restartPolicy: OnFailure
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["/bin/sh", "-c", "python init_db.py && python test_data.py"]
         env:
           - name: DB_HOST
@@ -28,5 +30,3 @@ spec:
             value: "{{ .Values.database.username }}"
           - name: DB_PASSWORD
             value: "{{ .Values.database.password }}"
-      restartPolicy: OnFailure
-      imagePullPolicy: IfNotPresent
