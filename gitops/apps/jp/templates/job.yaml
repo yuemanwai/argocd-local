@@ -5,7 +5,8 @@ metadata:
   labels:
     {{- include "jp.labels" . | nindent 4 }}
   annotations:
-    "argocd.argoproj.io/hook-delete-policy": HookSucceeded, BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/sync-options: Replace=true
 spec:
   backoffLimit: {{ .Values.job.backoffLimitCount }}
   ttlSecondsAfterFinished: 60
