@@ -5,7 +5,5 @@ metadata:
   labels:
     {{- include "jp.labels" . | nindent 4 }}
     component: database
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
 data:
   POSTGRES_DB: {{ .Values.database.name | quote }}
