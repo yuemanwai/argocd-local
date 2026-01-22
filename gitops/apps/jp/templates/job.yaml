@@ -4,8 +4,8 @@ metadata:
   name: {{ include "jp.fullname" . }}-init-db
   labels:
     {{- include "jp.labels" . | nindent 4 }}
-  # annotations:
-    # "argocd.argoproj.io/hook-delete-policy": HookSucceeded, BeforeHookCreation
+  annotations:
+    "argocd.argoproj.io/hook-delete-policy": HookSucceeded, BeforeHookCreation
 spec:
   backoffLimit: {{ .Values.job.backoffLimitCount }}
   ttlSecondsAfterFinished: 60
