@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "jp.labels" . | nindent 4 }}
   annotations:
-    argocd.argoproj.io/sync-wave: "1"
+    # argocd.argoproj.io/sync-wave: "1"
     {{- with .Values.deploymentAnnotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
