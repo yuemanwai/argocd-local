@@ -13,6 +13,10 @@ kube-prometheus-stack:
       requests:
         cpu: 100m
         memory: 512Mi
+    service:
+      type: NodePort
+      nodePort: 32000
+      targetPort: 3000
     sidecar:
       dashboards:
         enabled: true
