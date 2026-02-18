@@ -1,3 +1,8 @@
+# Production override example (do not commit real secrets)
+# Usage:
+#   cp values-prod.yaml.example values-prod.yaml
+#   then fill in real values locally or via secret management.
+
 localdb:
   enabled: false
 
@@ -25,15 +30,15 @@ serviceAccount:
   create: true
   name: webapp-sa
   annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::123456789012:role/irsa-rds-role
+    eks.amazonaws.com/role-arn: arn:aws:iam::<ACCOUNT_ID>:role/<IRSA_ROLE_NAME>
 
 env:
-  awsSecretName: arn:aws:secretsmanager:ap-southeast-1:123456789012:secret:jp-prod-db-secret
-  awsRegion: ap-southeast-1
+  awsSecretName: arn:aws:secretsmanager:<AWS_REGION>:<ACCOUNT_ID>:secret:<SECRET_NAME>
+  awsRegion: <AWS_REGION>
 
 database:
-  host: jp-prod-db.cluster-xxxxxxxxxxxx.ap-southeast-1.rds.amazonaws.com
-  name: jp
+  host: <RDS_ENDPOINT>
+  name: <DB_NAME>
 
 ingress:
   enabled: true
@@ -47,13 +52,13 @@ ingress:
     alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/success-codes: 200-399
     alb.ingress.kubernetes.io/manage-backend-security-group-rules: "true"
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-southeast-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:<AWS_REGION>:<ACCOUNT_ID>:certificate/<CERT_ID>
     alb.ingress.kubernetes.io/target-type: ip
   hosts:
-    - host: jp.example.com
+    - host: <APP_DOMAIN>
       paths:
         - path: /
           pathType: Prefix
   tls:
     - hosts:
-        - jp.example.com
+        - <APP_DOMAIN>

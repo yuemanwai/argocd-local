@@ -16,3 +16,6 @@
 # Ignore all credential files
 *creds.yaml
 *creds.*
+
+# Ignore production Helm values containing sensitive information
+gitops/apps/jp/values-prod.yaml
