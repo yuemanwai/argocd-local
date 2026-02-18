@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "**/templates/**/*.yaml": "yaml",
+    "**/templates/**/*.yml": "yaml",
+    "**/templates/**/*.tpl": "helm-template",
+    "**/templates/*.tpl": "helm-template"
+  },
+  "yaml.validate": false,
+  "yaml.schemas": {
+    "https://json.schemastore.org/chart.json": "gitops/{apps/*,root-app}/Chart.yaml"
+  }
+}
