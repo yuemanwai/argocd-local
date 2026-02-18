@@ -10,6 +10,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 
 spec:
+  {{- $stage := default "local" .Values.env.stage }}
+  {{- $useProdValues := eq $stage "prod" }}
   project: default
   source:
     repoURL: {{ .Values.spec.source.repoURL }}
@@ -18,7 +20,7 @@ spec:
     helm:
       valueFiles:
         - values.yaml
-        {{- if .Values.env.isProd }}
+        {{- if $useProdValues }}
         - values-prod.yaml
         {{- end }}
 

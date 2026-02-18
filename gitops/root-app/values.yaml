@@ -6,4 +6,5 @@ spec:
     server: https://kubernetes.default.svc
 
 env:
-  isProd: false
+  # local | prod
+  stage: local
