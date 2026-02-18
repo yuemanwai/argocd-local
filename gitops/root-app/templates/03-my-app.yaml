@@ -18,6 +18,9 @@ spec:
     helm:
       valueFiles:
         - values.yaml
+        {{- if .Values.env.isProd }}
+        - values-prod.yaml
+        {{- end }}
 
   destination:
     server: {{ .Values.spec.destination.server }}

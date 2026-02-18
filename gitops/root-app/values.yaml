@@ -4,3 +4,6 @@ spec:
     repoURL: https://github.com/yuemanwai/argocd-local.git
   destination:
     server: https://kubernetes.default.svc
+
+env:
+  isProd: true

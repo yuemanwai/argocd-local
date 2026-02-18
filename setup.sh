@@ -37,6 +37,80 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+MINIKUBE_PROFILE="minikube"
+
+ensure_minikube_context() {
+    log_info "Refreshing kube context for Minikube profile: $MINIKUBE_PROFILE"
+
+    minikube update-context -p "$MINIKUBE_PROFILE" >/dev/null 2>&1 || true
+
+    if kubectl config get-contexts -o name | grep -qx "$MINIKUBE_PROFILE"; then
+        kubectl config use-context "$MINIKUBE_PROFILE" >/dev/null 2>&1 || true
+    fi
+}
+
+start_or_recover_minikube() {
+    log_info "Starting Minikube profile: $MINIKUBE_PROFILE"
+
+    ensure_minikube_context
+    if kubectl get nodes >/dev/null 2>&1; then
+        log_warning "Minikube cluster is already reachable"
+        return 0
+    fi
+
+    log_info "Attempting to start Minikube profile..."
+    minikube start -p "$MINIKUBE_PROFILE" --memory 8192 --cpus 6 --addons=metrics-server || true
+    ensure_minikube_context
+    if kubectl get nodes >/dev/null 2>&1; then
+        log_success "Minikube started successfully"
+        return 0
+    fi
+
+    log_warning "Minikube profile looks unhealthy. Recreating profile..."
+    minikube delete -p "$MINIKUBE_PROFILE" >/dev/null 2>&1 || true
+    minikube start -p "$MINIKUBE_PROFILE" --memory 8192 --cpus 6 --addons=metrics-server
+    ensure_minikube_context
+    if kubectl get nodes >/dev/null 2>&1; then
+        log_success "Minikube recovered and started successfully"
+        return 0
+    fi
+
+    log_error "Failed to start a reachable Minikube cluster"
+    exit 1
+}
+
+ensure_cluster_reachable() {
+    local retries=30
+    local delay=2
+
+    if ! command -v kubectl >/dev/null 2>&1; then
+        log_error "kubectl is not installed or not in PATH"
+        exit 1
+    fi
+
+    if ! kubectl cluster-info >/dev/null 2>&1; then
+        log_warning "Kubernetes API is not reachable. Refreshing Minikube context..."
+        minikube update-context >/dev/null 2>&1 || true
+    fi
+
+    while [ "$retries" -gt 0 ]; do
+        if kubectl get nodes >/dev/null 2>&1; then
+            log_success "Kubernetes cluster is reachable"
+            return 0
+        fi
+
+        retries=$((retries - 1))
+        sleep "$delay"
+    done
+
+    log_error "Kubernetes cluster is still unreachable."
+    log_info "Run these checks manually:"
+    log_info "  minikube status"
+    log_info "  kubectl config current-context"
+    log_info "  minikube update-context"
+    exit 1
+}
+
 wait_for_namespace() {
     local namespace=$1
     log_info "Waiting for namespace $namespace to be ready..."
@@ -46,17 +120,14 @@ wait_for_namespace() {
 # =============================================================================
 # 1. Start Minikube
 # =============================================================================
-log_info "Starting Minikube..."
-if minikube status &>/dev/null; then
-    log_warning "Minikube is already running"
-else
-    minikube start --memory 8192 --cpus 6 --addons=metrics-server
-    log_success "Minikube started successfully"
-fi
+start_or_recover_minikube
 
 # Wait for Minikube to be fully ready
 log_info "Waiting for Minikube to be ready..."
 sleep 10
+
+log_info "Verifying Kubernetes connection..."
+ensure_cluster_reachable
 
 # =============================================================================
 # 2. Install ArgoCD
