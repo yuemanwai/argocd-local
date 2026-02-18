@@ -165,3 +165,7 @@ kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
 ```bash
 k top pod
 ```
+
+kubectl exec 入去 etcd
+
+etcdctl snapshot save /tmp/snapshot.db
