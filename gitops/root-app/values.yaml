@@ -6,4 +6,4 @@ spec:
     server: https://kubernetes.default.svc
 
 env:
-  isProd: true
+  isProd: false
