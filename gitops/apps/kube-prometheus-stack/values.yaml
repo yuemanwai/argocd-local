@@ -6,6 +6,15 @@ kube-prometheus-stack:
   # 2. 將 Grafana 變輕
   grafana:
     enabled: true
+    adminUser: admin
+    adminPassword: "change-me-grafana-admin-password"
+    persistence:
+      enabled: true
+      type: pvc
+      storageClassName: standard
+      accessModes:
+        - ReadWriteOnce
+      size: 5Gi
     resources:
       limits:
         cpu: 300m
