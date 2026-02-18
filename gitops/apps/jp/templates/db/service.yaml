@@ -19,4 +19,4 @@ spec:
     component: database
   type: ClusterIP
   clusterIP: None
-  {{- end }}
+{{- end }}
