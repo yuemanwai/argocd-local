@@ -60,3 +60,21 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Resolve the application secret name.
+*/}}
+{{- define "jp.appSecretName" -}}
+{{- default (include "jp.fullname" .) .Values.secret.existingSecretName -}}
+{{- end }}
+
+{{/*
+Resolve database host by environment.
+*/}}
+{{- define "jp.databaseHost" -}}
+{{- if .Values.localdb.enabled -}}
+{{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
+{{- else -}}
+{{- required "database.host is required when localdb.enabled=false" .Values.database.host -}}
+{{- end -}}
+{{- end }}

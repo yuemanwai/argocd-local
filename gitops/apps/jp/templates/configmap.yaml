@@ -6,7 +6,7 @@ metadata:
     {{- include "jp.labels" . | nindent 4 }}
 data:
   # Database configuration - dynamically constructed
-  DB_HOST: {{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
+  DB_HOST: {{ include "jp.databaseHost" . | quote }}
   DB_PORT: {{ .Values.database.port | quote }}
   DB_NAME: {{ .Values.database.name | quote }}
   {{- with .Values.configMap }}

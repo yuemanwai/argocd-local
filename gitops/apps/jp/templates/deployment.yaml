@@ -10,6 +10,7 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  {{- $appSecretName := include "jp.appSecretName" . }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -48,12 +49,25 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           envFrom:
             - secretRef:
-                name: {{ include "jp.fullname" . }}
+                name: {{ $appSecretName }}
             - configMapRef:
                 name: {{ include "jp.fullname" . }}
+          env:
+            {{- with .Values.env.awsSecretName }}
+            - name: AWS_SECRET_NAME
+              value: {{ . | quote }}
+            {{- end }}
+            {{- with .Values.env.awsRegion }}
+            - name: AWS_REGION
+              value: {{ . | quote }}
+            {{- end }}
+            - name: DB_HOST
+              value: {{ include "jp.databaseHost" . | quote }}
+            - name: DB_NAME
+              value: {{ .Values.database.name | quote }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.containerPort }}
               protocol: TCP
           {{- with .Values.startupProbe }}
           startupProbe:

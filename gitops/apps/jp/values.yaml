@@ -17,6 +17,9 @@ image:
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: 0b621a6
+
+# Application container port
+containerPort: 5000
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 # This is to override the chart name.
@@ -115,6 +118,8 @@ service:
   type: ClusterIP
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 5000
+  # Optional explicit targetPort (defaults to containerPort)
+  targetPort: null
 # ================================================================
 # Horizontal Pod Autoscaler Settings
 # ================================================================
@@ -138,6 +143,8 @@ podDisruptionBudget:
 # Database Settings
 # ================================================================
 database:
+  # External database host (used when localdb.enabled=false)
+  host: ""
   # PostgreSQL image configuration
   image:
     repository: postgres
@@ -163,6 +170,11 @@ database:
     enabled: true
     accessMode: ReadWriteOnce
     size: 1Gi
+
+# Runtime environment variables (used mainly for production integrations)
+env:
+  awsSecretName: ""
+  awsRegion: ""
 # ================================================================
 # ConfigMap Settings
 # ================================================================
@@ -186,6 +198,8 @@ configMap:
 # ================================================================
 # Note: DB_USERNAME, DB_PASSWORD are auto-injected from database config
 secret:
+  # Use an existing secret name for app env vars (DB_USERNAME/DB_PASSWORD, SECRET_KEY, etc.)
+  existingSecretName: ""
   # Flask secret key
   SECRET_KEY: "just-a-placeholder"
   # Mail server credentials (if MailHog doesn't require a password, you can omit this)
