@@ -5,6 +5,15 @@ kube-prometheus-stack:
 
   # 2. 將 Grafana 變輕
   grafana:
+    # 1. 既然手動睇到權限已經係 472，我哋就唔好俾佢再搞事
+    initChownData:
+      enabled: false
+
+    # 2. 維持非 Root 運行，確保安全
+    podSecurityContext:
+      runAsUser: 472
+      runAsGroup: 472
+      fsGroup: 472
     enabled: true
     adminUser: admin
     adminPassword: "change-me-grafana-admin-password"
