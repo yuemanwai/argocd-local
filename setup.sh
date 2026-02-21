@@ -272,6 +272,23 @@ if kubectl get namespace monitoring &>/dev/null; then
     kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 &
 fi
 
+# Kubecost (if kubecost exists)
+if kubectl get namespace kubecost &>/dev/null; then
+    KUBECOST_SERVICE=""
+    if kubectl get service kubecost-cost-analyzer -n kubecost &>/dev/null; then
+        KUBECOST_SERVICE="kubecost-cost-analyzer"
+    elif kubectl get service cost-analyzer -n kubecost &>/dev/null; then
+        KUBECOST_SERVICE="cost-analyzer"
+    fi
+
+    if [ -n "$KUBECOST_SERVICE" ]; then
+        log_info "Port-forwarding Kubecost (http://localhost:9091)..."
+        kubectl port-forward "service/$KUBECOST_SERVICE" 9091:9090 -n kubecost > /dev/null 2>&1 &
+    else
+        log_warning "Kubecost namespace found but service not ready yet"
+    fi
+fi
+
 sleep 3
 log_success "Port forwarding is active!"
 
@@ -291,6 +308,9 @@ echo -e "  Application: ${YELLOW}http://localhost:8080${NC}"
 if kubectl get namespace monitoring &>/dev/null; then
     echo -e "  Grafana:     ${YELLOW}http://localhost:3000${NC}"
     echo -e "  Prometheus:  ${YELLOW}http://localhost:9090${NC}"
+fi
+if kubectl get namespace kubecost &>/dev/null; then
+    echo -e "  Kubecost:    ${YELLOW}http://localhost:9091${NC}"
 fi
 echo ""
 echo -e "${BLUE}Credentials:${NC}"

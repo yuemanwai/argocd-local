@@ -100,6 +100,27 @@ start_forwards() {
             log_info "Prometheus port-forward already running"
         fi
     fi
+
+    # Kubecost
+    if kubectl get namespace kubecost &>/dev/null; then
+        KUBECOST_SERVICE=""
+        if kubectl get service kubecost-cost-analyzer -n kubecost &>/dev/null; then
+            KUBECOST_SERVICE="kubecost-cost-analyzer"
+        elif kubectl get service cost-analyzer -n kubecost &>/dev/null; then
+            KUBECOST_SERVICE="cost-analyzer"
+        fi
+
+        if [ -n "$KUBECOST_SERVICE" ]; then
+            if ! pgrep -f "port-forward.*$KUBECOST_SERVICE.*9091:9090" >/dev/null 2>&1; then
+                kubectl port-forward "service/$KUBECOST_SERVICE" -n kubecost 9091:9090 > /dev/null 2>&1 &
+                log_success "Kubecost: http://localhost:9091"
+            else
+                log_info "Kubecost port-forward already running"
+            fi
+        else
+            log_info "Kubecost namespace found but service not ready yet"
+        fi
+    fi
     
     sleep 2
     echo ""
