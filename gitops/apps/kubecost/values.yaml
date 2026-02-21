@@ -2068,7 +2068,7 @@ serviceMonitor: # the kubecost included prometheus uses scrapeConfigs and does n
   enabled: true
   interval: 1m
   scrapeTimeout: 10s
-  additionalLabels: :
+  additionalLabels:
     release: kube-prometheus-stack
   path: "/metrics"
   interval: "30s"
