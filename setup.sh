@@ -165,7 +165,7 @@ else
         --namespace argocd \
         --create-namespace \
         --values ./argocd/values.yaml \
-        --version 5.51.6 \
+        --version 9.4.3 \
         --wait
     log_success "ArgoCD installed successfully"
 fi
