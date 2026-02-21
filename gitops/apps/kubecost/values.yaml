@@ -2303,7 +2303,7 @@ costEventsAudit:
 # # These configs can also be set from the Settings page in the Kubecost product
 # # UI. Values in this block override config changes in the Settings UI on pod
 # # restart
-# kubecostProductConfigs:
+kubecostProductConfigs:
 #   # An optional list of cluster definitions that can be added for frontend
 #   # access. The local cluster is *always* included by default, so this list is
 #   # for non-local clusters.
@@ -2329,7 +2329,7 @@ costEventsAudit:
 #   # configurations will have no effect on metrics emitted such as
 #   # `node_ram_hourly_cost` or `node_cpu_hourly_cost`.
 #   # Ref: https://www.ibm.com/docs/en/kubecost/self-hosted/2.x?topic=installations-installing-in-air-gapped-environments
-#   customPricesEnabled: false
+  # customPricesEnabled: false
 #   defaultModelPricing:
 #     enabled: true
 #     CPU: "28.0"
@@ -2392,9 +2392,9 @@ costEventsAudit:
 #   # as the 'key' and the Account Name associated with it as the 'value'
 #   cloudAccountMapping:
 #     EXAMPLE_ACCOUNT_ID: EXAMPLE_ACCOUNT_NAME
-#   clusterName: "" # clusterName is the default context name in settings.
+  clusterName: "cluster-one" # clusterName is the default context name in settings.
 #   clusterAccountID: "" # Manually set Account property for assets
-#   currencyCode: "USD" # official support for USD, AUD, BRL, CAD, CHF, CNY, DKK, EUR, GBP, IDR, INR, JPY, NOK, PLN, SEK
+  currencyCode: "HKD" # official support for USD, AUD, BRL, CAD, CHF, CNY, DKK, EUR, GBP, IDR, INR, JPY, NOK, PLN, SEK
 #   azureBillingRegion: US # Represents 2-letter region code, e.g. West Europe = NL, Canada = CA. ref: https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes
 #   azureSubscriptionID: 0bd50fdf-c923-4e1e-850c-196dd3dcc5d3
 #   azureClientID: f2ef6f7d-71fb-47c8-b766-8d63a19db017
