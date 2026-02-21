@@ -39,6 +39,9 @@ spec:
     repoURL: {{ .Values.spec.source.repoURL }}
     path: gitops/apps/kube-prometheus-stack
     targetRevision: HEAD
+    helm:
+      valueFiles:
+        - values.yaml 
 
   destination:
     server: {{ .Values.spec.destination.server }}
