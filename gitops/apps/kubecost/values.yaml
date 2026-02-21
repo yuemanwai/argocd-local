@@ -3,7 +3,7 @@
 
 global:
   ## clusterId is required and must match the previous value of .Values.prometheus.server.global.external_labels.cluster_id, which must be removed.
-  clusterId: "minikube-lab"
+  clusterId: cluster-one
   federatedStorage:
     config: ""
     # A federated storage config can be provided via an existingSecret or via a string in helm values.

@@ -21,4 +21,4 @@
 gitops/apps/jp/values-prod.yaml
 
 # Ignore vendored Helm dependency archives (keep Chart.lock tracked)
-gitops/apps/kube-prometheus-stack/charts/*.tgz
+*.tgz

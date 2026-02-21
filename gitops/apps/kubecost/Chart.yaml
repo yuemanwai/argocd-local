@@ -6,5 +6,6 @@ version: 1.0.0
 
 dependencies:
   - name: cost-analyzer
-    version: 2.9.6 # 建議鎖定版本 (check 返最新 stable version)
+    # helm search repo cost-analyzer -l | head -n 15
+    version: 2.8.6 # 建議鎖定版本 (check 返最新 stable version)
     repository: https://kubecost.github.io/cost-analyzer/
