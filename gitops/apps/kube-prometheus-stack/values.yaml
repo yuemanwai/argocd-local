@@ -97,22 +97,21 @@ kube-prometheus-stack:
       groups:
         - name: kubecost.recording.rules
           rules:
-            # 修正：fallback 條 rule 應該只針對「真係冇 container label」嘅數
+            # 1. 針對無 container label 嘅數做補底
             - record: kubecost_container_cpu_usage_irate
               expr: sum(irate(container_cpu_usage_seconds_total{container="", pod!=""}[1m])) by (pod, namespace, node, cluster)
               labels:
                 container: unknown
 
-            # 正常條 rule
+            # 2. 正常嘅計數 Rule
             - record: kubecost_container_cpu_usage_irate
-              expr: su
+              expr: sum(irate(container_cpu_usage_seconds_total{container!="", pod!=""}[1m])) by (container, pod, namespace, node, cluster)
 
-            # 3. 另外加多兩條真正「完整」嘅 rule，預備第日你有返 container label 時用
-            - record: kubecost_container_cpu_usage_irate
-              expr: sum(irate(container_cpu_usage_seconds_total{container!="",pod!=""}[1m])) by (container, pod, namespace, node, cluster)
-
+            # 3. Memory 補底
             - record: kubecost_container_memory_working_set_bytes
-              expr: sum(container_memory_working_set_bytes{container!="",pod!=""}) by (container, pod, namespace, node, cluster)
+              expr: sum(container_memory_working_set_bytes{container="", pod!=""}) by (pod, namespace, node, cluster)
+              labels:
+                container: unknown
 kubelet:
   serviceMonitor:
     cAdvisor: true
