@@ -87,41 +87,41 @@ kube-prometheus-stack:
   kubeProxy:
     enabled: false
 
-  additionalPrometheusRulesMap:
-    # 呢粒 key 你鍾意叫乜都得，通常叫 kubecost-rules
-    kubecost-rules:
-      additionalLabels:
-        release: kube-prometheus-stack
-        prometheus: kube-prometheus-stack # 有些版本會搵呢粒
-        role: alert-rules
-      groups:
-        - name: kubecost.recording.rules
-          rules:
-            # 1. 針對無 container label 嘅數做補底
-            - record: kubecost_container_cpu_usage_irate
-              expr: sum(irate(container_cpu_usage_seconds_total{container="", pod!=""}[1m])) by (pod, namespace, node, cluster)
-              labels:
-                container: unknown
+  # additionalPrometheusRulesMap:
+  #   # 呢粒 key 你鍾意叫乜都得，通常叫 kubecost-rules
+  #   kubecost-rules:
+  #     additionalLabels:
+  #       release: kube-prometheus-stack
+  #       prometheus: kube-prometheus-stack # 有些版本會搵呢粒
+  #       role: alert-rules
+  #     groups:
+  #       - name: kubecost.recording.rules
+  #         rules:
+  #           # 1. 針對無 container label 嘅數做補底
+  #           - record: kubecost_container_cpu_usage_irate
+  #             expr: sum(irate(container_cpu_usage_seconds_total{container="", pod!=""}[1m])) by (pod, namespace, node, cluster)
+  #             labels:
+  #               container: unknown
 
-            # 2. 正常嘅計數 Rule
-            - record: kubecost_container_cpu_usage_irate
-              expr: sum(irate(container_cpu_usage_seconds_total{container!="", pod!=""}[1m])) by (container, pod, namespace, node, cluster)
+  #           # 2. 正常嘅計數 Rule
+  #           - record: kubecost_container_cpu_usage_irate
+  #             expr: sum(irate(container_cpu_usage_seconds_total{container!="", pod!=""}[1m])) by (container, pod, namespace, node, cluster)
 
-            # 3. Memory 補底
-            - record: kubecost_container_memory_working_set_bytes
-              expr: sum(container_memory_working_set_bytes{container="", pod!=""}) by (pod, namespace, node, cluster)
-              labels:
-                container: unknown
-  kubelet:
-    enabled: true
-    serviceMonitor:
-      cAdvisor: true
-      # 喺數據「入口」直接加 label
-      metricRelabelings:
-        - sourceLabels: [pod]
-          targetLabel: container
-          action: replace
-      cAdvisorMetricRelabelings:
-        - sourceLabels: [pod]
-          targetLabel: container
-          action: replace
+  #           # 3. Memory 補底
+  #           - record: kubecost_container_memory_working_set_bytes
+  #             expr: sum(container_memory_working_set_bytes{container="", pod!=""}) by (pod, namespace, node, cluster)
+  #             labels:
+  #               container: unknown
+  # kubelet:
+  #   enabled: true
+  #   serviceMonitor:
+  #     cAdvisor: true
+  #     # 喺數據「入口」直接加 label
+  #     metricRelabelings:
+  #       - sourceLabels: [pod]
+  #         targetLabel: container
+  #         action: replace
+  #     cAdvisorMetricRelabelings:
+  #       - sourceLabels: [pod]
+  #         targetLabel: container
+  #         action: replace
