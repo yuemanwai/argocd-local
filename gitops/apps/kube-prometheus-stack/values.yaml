@@ -113,10 +113,15 @@ kube-prometheus-stack:
               labels:
                 container: unknown
 kubelet:
+  enabled: true
   serviceMonitor:
     cAdvisor: true
     # 喺數據「入口」直接加 label
     metricRelabelings:
+      - sourceLabels: [pod]
+        targetLabel: container
+        action: replace
+    cAdvisorMetricRelabelings:
       - sourceLabels: [pod]
         targetLabel: container
         action: replace
