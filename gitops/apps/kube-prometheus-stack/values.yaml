@@ -61,6 +61,7 @@ kube-prometheus-stack:
   # 3. 大幅閹割 Prometheus
   prometheus:
     prometheusSpec:
+      ruleSelectorNilUsesHelmValues: false # 重要！等我哋自己定義嘅 recording rules 可以生效
       # 這是關鍵！Minikube 重啟數據無咗就算，唔好用 PV，用 RAM 做 Storage (快 + 慳 IO)
       # storageSpec:
       #   emptyDir:
