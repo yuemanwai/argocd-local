@@ -85,3 +85,30 @@ kube-prometheus-stack:
     enabled: false
   kubeProxy:
     enabled: false
+
+  additionalPrometheusRulesMap:
+    # 呢粒 key 你鍾意叫乜都得，通常叫 kubecost-rules
+    kubecost-rules:
+      groups:
+        - name: kubecost.recording.rules
+          rules:
+            # 1. 補返 CPU Irate：針對你嗰啲有 pod 但冇 container label 嘅數
+            - record: kubecost_container_cpu_usage_irate
+              expr: |
+                sum(irate(container_cpu_usage_seconds_total{pod!=""}[1m])) by (pod, namespace, node, cluster)
+              labels:
+                container: "unknown" # 夾硬俾粒 label 佢，等 Kubecost 唔好報 absent
+
+            # 2. 補返 Memory：同樣原理
+            - record: kubecost_container_memory_working_set_bytes
+              expr: |
+                sum(container_memory_working_set_bytes{pod!=""}) by (pod, namespace, node, cluster)
+              labels:
+                container: "unknown"
+
+            # 3. 另外加多兩條真正「完整」嘅 rule，預備第日你有返 container label 時用
+            - record: kubecost_container_cpu_usage_irate
+              expr: sum(irate(container_cpu_usage_seconds_total{container!="",pod!=""}[1m])) by (container, pod, namespace, node, cluster)
+
+            - record: kubecost_container_memory_working_set_bytes
+              expr: sum(container_memory_working_set_bytes{container!="",pod!=""}) by (container, pod, namespace, node, cluster)

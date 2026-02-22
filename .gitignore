@@ -22,3 +22,7 @@ gitops/apps/jp/values-prod.yaml
 
 # Ignore vendored Helm dependency archives (keep Chart.lock tracked)
 *.tgz
+
+
+# files for testing
+kps-values.yaml
