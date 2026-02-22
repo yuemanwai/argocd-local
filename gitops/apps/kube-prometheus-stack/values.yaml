@@ -113,3 +113,11 @@ kube-prometheus-stack:
 
             - record: kubecost_container_memory_working_set_bytes
               expr: sum(container_memory_working_set_bytes{container!="",pod!=""}) by (container, pod, namespace, node, cluster)
+kubelet:
+  serviceMonitor:
+    cAdvisor: true
+    # 喺數據「入口」直接加 label
+    metricRelabelings:
+      - sourceLabels: [pod]
+        targetLabel: container
+        action: replace
