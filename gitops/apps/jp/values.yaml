@@ -4,7 +4,6 @@
 
 localdb:
   enabled: true
-
 # ================================================================
 # Deployment Settings
 # ================================================================
@@ -16,8 +15,7 @@ image:
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: 0b621a6
-
+  tag: 6db94d9
 # Application container port
 containerPort: 5000
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
@@ -170,7 +168,6 @@ database:
     enabled: true
     accessMode: ReadWriteOnce
     size: 1Gi
-
 # Runtime environment variables (used mainly for production integrations)
 env:
   awsSecretName: ""
