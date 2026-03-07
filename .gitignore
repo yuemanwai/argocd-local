@@ -18,7 +18,7 @@
 *creds.*
 
 # Ignore production Helm values containing sensitive information
-gitops/apps/jp/values-prod.yaml
+# gitops/apps/jp/values-prod.yaml
 
 # Ignore vendored Helm dependency archives (keep Chart.lock tracked)
 *.tgz
