@@ -14,19 +14,35 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      # 👇 已經完美：IRSA 員工證 (Local 環境無影響，Prod 環境極重要)
+      serviceAccountName: {{ include "jp.serviceAccountName" . }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         command: ["/bin/sh", "-c", "python init_db.py && python test_data.py"]
+        
+        # 🌟 核心魔法 1：全盤繼承 Deployment 嘅 ConfigMap 同 Secret 邏輯
+        envFrom:
+          {{- if not .Values.secret.existingSecretName }}
+          - secretRef:
+              name: {{ include "jp.appSecretName" . }}
+          {{- end }}
+          - configMapRef:
+              name: {{ include "jp.fullname" . }}
+        
+        # 🌟 核心魔法 2：動態 Override，同 Deployment 100% 對齊！
         env:
+          {{- with .Values.env.awsSecretName }}
+          - name: AWS_SECRET_NAME
+            value: {{ . | quote }}
+          {{- end }}
+          {{- with .Values.env.awsRegion }}
+          - name: AWS_REGION
+            value: {{ . | quote }}
+          {{- end }}
+          # 👇 依賴 helper 自動判斷：Local 就出 K8s DNS，Prod 就出 Terraform 俾嘅 RDS URL
           - name: DB_HOST
-            value: {{ include "jp.fullname" . }}-db.{{ .Release.Namespace }}.svc.cluster.local
-          - name: DB_PORT
-            value: "{{ .Values.database.port }}"
+            value: {{ include "jp.databaseHost" . | quote }}
           - name: DB_NAME
-            value: "{{ .Values.database.name }}"
-          - name: DB_USERNAME
-            value: "{{ .Values.database.username }}"
-          - name: DB_PASSWORD
-            value: "{{ .Values.database.password }}"
+            value: {{ .Values.database.name | quote }}
