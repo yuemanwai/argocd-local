@@ -6,6 +6,14 @@
 localdb:
   enabled: false
 
+# 因為 EKS (Prod) 無裝 Prometheus Operator，所以必須關閉 ServiceMonitor
+serviceMonitor:
+  enabled: false
+
+# (如果你個 dashboard: enabled: true 都會出事，順手熄埋佢)
+dashboard:
+  enabled: false
+
 # 2. 開啟 AWS 專屬嘅 ServiceAccount (IRSA 綁定)
 serviceAccount:
   create: true
