@@ -20,7 +20,7 @@ serviceAccount:
   name: webapp-sa
   annotations:
     # 呢度可以寫 dummy value，因為 Terraform ArgoCD Parameters 會負責 Override 佢！
-    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/irsa-rds-role"
+    eks.amazonaws.com/role-arn: ""
 
 # 3. AWS 環境變數 (呢兩個都係留空，由 Terraform 動態注入)
 env:
