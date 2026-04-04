@@ -9,7 +9,7 @@
 # 4. Clean up ArgoCD Helm release and CRDs
 # 5. Stop port-forwards and optionally stop Minikube
 #
-# Usage: ./cleanup.sh
+# Usage: ./cleanup.sh [--cluster auto|minikube|orbstack]
 #
 set +e  # Don't exit on error - we need to handle cleanup even if some commands fail
 
@@ -35,6 +35,77 @@ log_warning() {
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
+
+CLUSTER_PROVIDER="auto"
+
+usage() {
+    cat <<EOF
+Usage: ./cleanup.sh [--cluster auto|minikube|orbstack]
+
+Options:
+  --cluster   Select cleanup provider behavior.
+              auto (default): detect from current kube context.
+              minikube: stop minikube at the end.
+              orbstack: stop OrbStack at the end.
+EOF
+}
+
+parse_args() {
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --cluster)
+                if [ -z "${2:-}" ]; then
+                    log_error "Missing value for --cluster"
+                    usage
+                    exit 1
+                fi
+                CLUSTER_PROVIDER="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                log_error "Unknown argument: $1"
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ "$CLUSTER_PROVIDER" != "auto" ] && [ "$CLUSTER_PROVIDER" != "minikube" ] && [ "$CLUSTER_PROVIDER" != "orbstack" ]; then
+        log_error "Unsupported --cluster value: $CLUSTER_PROVIDER"
+        usage
+        exit 1
+    fi
+}
+
+detect_cluster_provider() {
+    if [ "$CLUSTER_PROVIDER" != "auto" ]; then
+        return
+    fi
+
+    local current_context
+    current_context=$(kubectl config current-context 2>/dev/null || true)
+
+    case "$current_context" in
+        *orbstack*)
+            CLUSTER_PROVIDER="orbstack"
+            ;;
+        *minikube*)
+            CLUSTER_PROVIDER="minikube"
+            ;;
+        *)
+            CLUSTER_PROVIDER="orbstack"
+            log_warning "Could not detect provider from context '$current_context'; defaulting to orbstack"
+            ;;
+    esac
+}
+
+parse_args "$@"
+detect_cluster_provider
+log_info "Cleanup provider mode: $CLUSTER_PROVIDER"
 
 # Confirmation prompt
 echo ""
@@ -186,13 +257,24 @@ if [ -f "./port-forward.sh" ]; then
 fi
 pkill -f "port-forward" 2>/dev/null || true
 
-# Ask about Minikube
-if command -v minikube >/dev/null 2>&1 && minikube status >/dev/null 2>&1; then
-    read -p "Stop Minikube now? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Stopping Minikube..."
-        minikube stop || log_warning "Failed to stop Minikube"
+# Ask about cluster runtime stop based on provider
+if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
+    if command -v minikube >/dev/null 2>&1 && minikube status >/dev/null 2>&1; then
+        read -p "Stop Minikube now? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Stopping Minikube..."
+            minikube stop || log_warning "Failed to stop Minikube"
+        fi
+    fi
+elif [ "$CLUSTER_PROVIDER" = "orbstack" ]; then
+    if command -v orbctl >/dev/null 2>&1 && orbctl status 2>/dev/null | grep -q "Running"; then
+        read -p "Stop OrbStack now? (y/N): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            log_info "Stopping OrbStack..."
+            orbctl stop || log_warning "Failed to stop OrbStack"
+        fi
     fi
 fi
 

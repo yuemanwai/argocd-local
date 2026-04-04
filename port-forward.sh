@@ -5,7 +5,6 @@
 #   ./port-forward.sh start   - Start all port forwards
 #   ./port-forward.sh stop    - Stop all port forwards
 #   ./port-forward.sh status  - Show running port forwards
-#   ./port-forward.sh restart - Restart all port forwards
 #
 
 GREEN='\033[0;32m'
@@ -54,6 +53,37 @@ show_status() {
     echo ""
     log_info "To kill a specific port-forward: ${YELLOW}kill <PID>${NC}"
     log_info "To kill all port-forwards: ${YELLOW}./port-forward.sh stop${NC}"
+    echo ""
+}
+
+print_access_info() {
+    local argocd_password=""
+    local grafana_password=""
+
+    argocd_password=$(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' 2>/dev/null | base64 -d || true)
+    grafana_password=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' 2>/dev/null | base64 -d || true)
+
+    echo ""
+    log_info "==================== ACCESS INFO ===================="
+    echo -e "  ArgoCD:      ${YELLOW}https://localhost:8090${NC}"
+    echo -e "  Application: ${YELLOW}http://localhost:8080${NC}"
+    echo -e "  Grafana:     ${YELLOW}http://localhost:3000${NC}"
+    echo -e "  Prometheus:  ${YELLOW}http://localhost:9090${NC}"
+    echo -e "  Kubecost:    ${YELLOW}http://localhost:9091${NC}"
+    echo ""
+    echo -e "  ${YELLOW}ArgoCD${NC} username: admin"
+    if [ -n "$argocd_password" ]; then
+        echo -e "  ${YELLOW}ArgoCD${NC} password: $argocd_password"
+    else
+        echo -e "  ${YELLOW}ArgoCD${NC} password: (not available yet)"
+    fi
+
+    echo -e "  ${YELLOW}Grafana${NC} username: admin"
+    if [ -n "$grafana_password" ]; then
+        echo -e "  ${YELLOW}Grafana${NC} password: $grafana_password"
+    else
+        echo -e "  ${YELLOW}Grafana${NC} password: (not available yet)"
+    fi
     echo ""
 }
 
@@ -125,7 +155,7 @@ start_forwards() {
     sleep 2
     echo ""
     log_success "Port forwards started!"
-    # show_status
+    print_access_info
 }
 
 stop_forwards() {
@@ -151,18 +181,12 @@ case "${1:-status}" in
     status)
         show_status
         ;;
-    restart)
-        stop_forwards
-        sleep 1
-        start_forwards
-        ;;
     *)
-        echo "Usage: $0 {start|stop|status|restart}"
+        echo "Usage: $0 {start|stop|status}"
         echo ""
         echo "  start   - Start all port forwards"
         echo "  stop    - Stop all port forwards"
         echo "  status  - Show running port forwards"
-        echo "  restart - Restart all port forwards"
         exit 1
         ;;
 esac
