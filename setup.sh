@@ -326,24 +326,24 @@ wait_for_namespace argocd
 log_info "Deploying Root Application via ArgoCD (App of Apps pattern)..."
 
 # First, apply git repository secret
-if [ -f "bootstrap/repo-secret/git-creds.yaml" ]; then
-    if git_creds_file_is_placeholder "bootstrap/repo-secret/git-creds.yaml"; then
+if [ -f "bootstrap/repo-secret/github-repo-secret.template.yaml" ]; then
+    if git_creds_file_is_placeholder "bootstrap/repo-secret/github-repo-secret.template.yaml"; then
         if has_existing_repo_secret; then
-            log_info "git-creds.yaml still has placeholders; using existing repo secret in cluster"
+            log_info "github-repo-secret.template.yaml still has placeholders; using existing repo secret in cluster"
         else
-            log_warning "git-creds.yaml still has placeholders and no repo secret exists in cluster"
-            log_info "Run ./bootstrap/repo-secret/apply-git-creds.sh to apply credentials securely"
+            log_warning "github-repo-secret.template.yaml still has placeholders and no repo secret exists in cluster"
+            log_info "Run ./bootstrap/repo-secret/apply-github-repo-secret-from-prompts.sh to apply credentials securely"
         fi
     else
         log_info "Applying Git credentials..."
-        kubectl apply -f bootstrap/repo-secret/git-creds.yaml >/dev/null 2>&1 || log_warning "Git credentials apply returned non-zero"
+        kubectl apply -f bootstrap/repo-secret/github-repo-secret.template.yaml >/dev/null 2>&1 || log_warning "Git credentials apply returned non-zero"
     fi
 else
     if has_existing_repo_secret; then
         log_info "Git credentials file not found; using existing repo secret in cluster"
     else
         log_warning "Git credentials file not found and no repo secret exists in cluster"
-        log_info "Run ./bootstrap/repo-secret/apply-git-creds.sh to apply credentials securely"
+        log_info "Run ./bootstrap/repo-secret/apply-github-repo-secret-from-prompts.sh to apply credentials securely"
     fi
 fi
 

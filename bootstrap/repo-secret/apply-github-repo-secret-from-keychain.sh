@@ -17,7 +17,7 @@ GITHUB_PAT="$(security find-generic-password -a "$ACCOUNT_NAME" -s "$SERVICE_NAM
 
 if [ -z "$GITHUB_PAT" ]; then
   echo "No PAT found in Keychain for service '$SERVICE_NAME' account '$ACCOUNT_NAME'."
-  echo "Run ./bootstrap/repo-secret/keychain-save-token.sh first."
+  echo "Run ./bootstrap/repo-secret/save-github-pat-to-keychain.sh first."
   exit 1
 fi
 
