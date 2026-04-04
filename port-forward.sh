@@ -1,8 +1,9 @@
 #!/bin/bash
 #
-# Port forwarding management script
-# Usage: 
-#   ./port-forward.sh start   - Start all port forwards
+# Manage local port-forwards for the ArgoCD lab.
+#
+# Usage:
+#   ./port-forward.sh start   - Start all port forwards and print access info
 #   ./port-forward.sh stop    - Stop all port forwards
 #   ./port-forward.sh status  - Show running port forwards
 #
@@ -25,10 +26,16 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+print_section() {
+    echo ""
+    log_info "================================================================"
+    log_info "$1"
+    log_info "================================================================"
+    echo ""
+}
+
 show_status() {
-    echo ""
-    log_info "==================== PORT FORWARDS STATUS ===================="
-    echo ""
+    print_section "Port Forwards Status"
 
     if ! pgrep -f "kubectl port-forward" >/dev/null 2>&1; then
         log_error "No port-forward processes running"
@@ -50,9 +57,8 @@ show_status() {
         fi
     done
 
-    echo ""
-    log_info "To kill a specific port-forward: ${YELLOW}kill <PID>${NC}"
-    log_info "To kill all port-forwards: ${YELLOW}./port-forward.sh stop${NC}"
+    log_info "To stop one process: ${YELLOW}kill <PID>${NC}"
+    log_info "To stop everything: ${YELLOW}./port-forward.sh stop${NC}"
     echo ""
 }
 
@@ -64,7 +70,7 @@ print_access_info() {
     grafana_password=$(kubectl get secret -n monitoring kube-prometheus-stack-grafana -o jsonpath='{.data.admin-password}' 2>/dev/null | base64 -d || true)
 
     echo ""
-    log_info "==================== ACCESS INFO ===================="
+    print_section "Access Info"
     echo -e "  ArgoCD:      ${YELLOW}https://localhost:8090${NC}"
     echo -e "  Application: ${YELLOW}http://localhost:8080${NC}"
     echo -e "  Grafana:     ${YELLOW}http://localhost:3000${NC}"
@@ -154,7 +160,7 @@ start_forwards() {
     
     sleep 2
     echo ""
-    log_success "Port forwards started!"
+    log_success "Port forwards are active."
     print_access_info
 }
 
@@ -184,7 +190,7 @@ case "${1:-status}" in
     *)
         echo "Usage: $0 {start|stop|status}"
         echo ""
-        echo "  start   - Start all port forwards"
+        echo "  start   - Start all port forwards and print access info"
         echo "  stop    - Stop all port forwards"
         echo "  status  - Show running port forwards"
         exit 1

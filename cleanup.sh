@@ -1,15 +1,16 @@
 #!/bin/bash
 #
-# ArgoCD Cleanup Script - Complete cleanup of ArgoCD and all managed applications
+# Clean up the local ArgoCD lab.
 #
-# This script will:
-# 1. Delete bootstrap configuration (triggers cascade deletion)
-# 2. Remove all finalizers from stuck resources
-# 3. Delete all managed resources and namespaces
-# 4. Clean up ArgoCD Helm release and CRDs
-# 5. Stop port-forwards and optionally stop Minikube
+# What it does:
+# 1. Removes the bootstrap application
+# 2. Clears finalizers from stuck resources
+# 3. Deletes managed namespaces and CRDs
+# 4. Uninstalls Helm releases
+# 5. Stops port-forwards and optionally stops the cluster runtime
 #
-# Usage: ./cleanup.sh [--cluster auto|minikube|orbstack]
+# Usage:
+#   ./cleanup.sh [--cluster auto|minikube|orbstack]
 #
 set +e  # Don't exit on error - we need to handle cleanup even if some commands fail
 
@@ -34,6 +35,14 @@ log_warning() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_section() {
+    echo ""
+    log_info "================================================================"
+    log_info "$1"
+    log_info "================================================================"
+    echo ""
 }
 
 CLUSTER_PROVIDER="auto"
@@ -108,10 +117,8 @@ detect_cluster_provider
 log_info "Cleanup provider mode: $CLUSTER_PROVIDER"
 
 # Confirmation prompt
-echo ""
-log_warning "==================== WARNING ===================="
-log_warning "This script will DELETE ArgoCD and ALL managed applications!"
-log_warning "=================================================="
+print_section "Warning"
+log_warning "This script will DELETE ArgoCD and ALL managed applications."
 echo ""
 read -p "Are you sure you want to continue? (yes/no): " -r
 echo
@@ -133,10 +140,8 @@ remove_finalizers() {
     fi
 }
 
-# =============================================================================
-# 1. Delete Bootstrap and Remove All Finalizers
-# =============================================================================
-log_info "Step 1/5: Deleting root-app and removing finalizers from all resources..."
+print_section "1. Delete Bootstrap and Remove Finalizers"
+log_info "Deleting root app and cleaning up stuck finalizers..."
 
 # Delete bootstrap
 if [ -f "bootstrap/bootstrap.yaml" ]; then
@@ -163,10 +168,8 @@ for ns in argocd monitoring logging loki; do
 done
 sleep 1
 
-# =============================================================================
-# 2. Delete Helm Releases
-# =============================================================================
-log_info "Step 2/5: Uninstalling Helm releases..."
+print_section "2. Delete Helm Releases"
+log_info "Uninstalling Helm releases..."
 
 for release in argocd kube-prometheus-stack loki my-app; do
     if helm list -n argocd 2>/dev/null | grep -q "^${release}"; then
@@ -177,10 +180,8 @@ done
 log_info "Waiting for Helm releases to be removed..."
 sleep 3
 
-# =============================================================================
-# 3. Remove Finalizers and Force Delete Resources
-# =============================================================================
-log_info "Step 3/5: Force removing finalizers from stuck resources..."
+print_section "3. Force Delete Stuck Resources"
+log_info "Removing finalizers from PVCs, PVs, and ArgoCD resources..."
 
 # Remove finalizers from ArgoCD CRDs
 log_info "Removing finalizers from ArgoCD CRD resources..."
@@ -209,10 +210,8 @@ done 2>/dev/null || true
 
 sleep 2
 
-# =============================================================================
-# 4. Delete Namespaces and CRDs
-# =============================================================================
-log_info "Step 4/5: Deleting namespaces and CRDs..."
+print_section "4. Delete Namespaces and CRDs"
+log_info "Deleting managed namespaces, CRDs, and cluster roles..."
 
 # Delete managed namespaces
 for ns in monitoring logging loki argocd; do
@@ -246,10 +245,8 @@ done 2>/dev/null || true
 
 sleep 3
 
-# =============================================================================
-# 5. Cleanup and Port Forwards
-# =============================================================================
-log_info "Step 5/5: Final cleanup..."
+print_section "5. Final Cleanup"
+log_info "Stopping port-forwards and checking whether the cluster runtime should stop..."
 
 # Stop port forwards
 if [ -f "./port-forward.sh" ]; then
@@ -278,12 +275,7 @@ elif [ "$CLUSTER_PROVIDER" = "orbstack" ]; then
     fi
 fi
 
-# =============================================================================
-# Summary
-# =============================================================================
-echo ""
-log_success "==================== CLEANUP COMPLETE ===================="
-echo ""
+print_section "Cleanup Complete"
 log_success "All resources have been cleaned up:"
 log_info "  ✓ Bootstrap application deleted"
 log_info "  ✓ All finalizers removed from stuck resources"

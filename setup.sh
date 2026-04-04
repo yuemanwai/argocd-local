@@ -1,15 +1,16 @@
 #!/bin/bash
 #
-# Setup script for Kubernetes development environment with ArgoCD
-# 
-# This script will:
-# 1. Start Minikube with required resources
-# 2. Install ArgoCD via Helm (with checks for existing installation)
-# 3. Deploy applications via ArgoCD
-# 4. Setup port forwarding for services
-# 5. Display all credentials and access URLs
+# Set up the local ArgoCD lab.
 #
-# Usage: ./setup.sh
+# What it does:
+# 1. Chooses or starts a cluster (Minikube or OrbStack)
+# 2. Installs or upgrades ArgoCD
+# 3. Applies the root app bootstrap
+# 4. Prints credentials and access URLs
+# 5. Starts port-forwards for the common services
+#
+# Usage:
+#   ./setup.sh [--cluster minikube|orbstack]
 #
 set -e  # Exit on any error
 
@@ -35,6 +36,14 @@ log_warning() {
 
 log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_section() {
+    echo ""
+    log_info "================================================================"
+    log_info "$1"
+    log_info "================================================================"
+    echo ""
 }
 
 has_existing_repo_secret() {
@@ -258,9 +267,7 @@ wait_for_applications_sync() {
     log_warning "Application sync is still in progress; continuing setup"
 }
 
-# =============================================================================
-# 1. Prepare Kubernetes Cluster
-# =============================================================================
+print_section "1. Prepare Kubernetes Cluster"
 parse_args "$@"
 
 if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
@@ -276,9 +283,7 @@ fi
 log_info "Verifying Kubernetes connection..."
 ensure_cluster_reachable
 
-# =============================================================================
-# 2. Install ArgoCD
-# =============================================================================
+print_section "2. Install ArgoCD"
 log_info "Checking ArgoCD Helm repository..."
 if helm repo list 2>/dev/null | grep -q "^argo\s"; then
     log_success "ArgoCD Helm repo already exists"
@@ -320,10 +325,8 @@ fi
 # Wait for ArgoCD pods to be ready
 wait_for_namespace argocd
 
-# =============================================================================
-# 3. Deploy Root Application (App of Apps pattern)
-# =============================================================================
-log_info "Deploying Root Application via ArgoCD (App of Apps pattern)..."
+print_section "3. Deploy Root Application"
+log_info "Deploying root application via ArgoCD..."
 
 # First, apply git repository secret
 if [ -f "bootstrap/repo-secret/github-repo-secret.template.yaml" ]; then
@@ -353,12 +356,7 @@ kubectl apply -f bootstrap/bootstrap.yaml 2>/dev/null || log_warning "Bootstrap 
 
 wait_for_applications_sync
 
-# =============================================================================
-# 4. Get Passwords
-# =============================================================================
-echo ""
-log_info "==================== CREDENTIALS ===================="
-echo ""
+print_section "4. Credentials"
 
 # ArgoCD password
 log_info "ArgoCD Admin Password:"
@@ -386,10 +384,8 @@ fi
 log_info "====================================================="
 echo ""
 
-# =============================================================================
-# 5. Setup Port Forwarding
-# =============================================================================
-log_info "Setting up port forwarding..."
+print_section "5. Setup Port Forwarding"
+log_info "Setting up port forwards..."
 
 # Check for existing port-forwards
 if pgrep -f "port-forward" >/dev/null 2>&1; then
