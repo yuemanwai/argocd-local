@@ -19,10 +19,39 @@ Kubernetes manifest for learning Argo CD
 minikube start --memory 8192 --cpus 6 --addons=metrics-server
 ```
 
+### Run Project Setup (Minikube mode, default)
+```bash
+./setup.sh
+# or explicit
+./setup.sh --cluster minikube
+```
+
 ### Check Minikube Resource Usage
 ```bash
 docker stats
 ```
+
+---
+
+## 🍎 OrbStack Kubernetes Setup (macOS)
+
+### 1) Install OrbStack and enable Kubernetes
+- Install OrbStack from the official website
+- Open OrbStack and enable Kubernetes
+- Confirm context exists:
+
+```bash
+kubectl config get-contexts
+```
+
+You should see an `orbstack` context.
+
+### 2) Run project setup in OrbStack mode
+```bash
+./setup.sh --cluster orbstack
+```
+
+This keeps your original Minikube flow intact, so you can still use old Windows setup when needed.
 
 ---
 

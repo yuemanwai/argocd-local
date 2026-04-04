@@ -26,36 +26,36 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# show_status() {
-#     echo ""
-#     log_info "==================== PORT FORWARDS STATUS ===================="
-#     echo ""
-    
-#     if ! pgrep -f "port-forward" >/dev/null 2>&1; then
-#         log_error "No port-forward processes running"
-#         echo ""
-#         return
-#     fi
-    
-#     echo -e "${BLUE}PID     PORT    SERVICE                NAMESPACE${NC}"
-#     echo "-------------------------------------------------------------------"
-    
-#     ps aux | grep -E "port-forward" | grep -v grep | while read -r line; do
-#         pid=$(echo "$line" | awk '{print $2}')
-#         service=$(echo "$line" | grep -o "service/[^ ]*" | cut -d'/' -f2)
-#         port=$(echo "$line" | grep -o "[0-9]\+:[0-9]\+" | cut -d':' -f1)
-#         namespace=$(echo "$line" | grep -oP '(?<= -n )[^ ]+' | head -1)
-        
-#         if [ -n "$service" ] && [ -n "$port" ]; then
-#             printf "${GREEN}%-7s${NC} ${YELLOW}%-7s${NC} %-24s %s\n" "$pid" "$port" "$service" "${namespace:-default}"
-#         fi
-#     done
-    
-#     echo ""
-#     log_info "To kill a specific port-forward: ${YELLOW}kill <PID>${NC}"
-#     log_info "To kill all port-forwards: ${YELLOW}./port-forward.sh stop${NC}"
-#     echo ""
-# }
+show_status() {
+    echo ""
+    log_info "==================== PORT FORWARDS STATUS ===================="
+    echo ""
+
+    if ! pgrep -f "kubectl port-forward" >/dev/null 2>&1; then
+        log_error "No port-forward processes running"
+        echo ""
+        return
+    fi
+
+    echo -e "${BLUE}PID     PORT    SERVICE                NAMESPACE${NC}"
+    echo "-------------------------------------------------------------------"
+
+    pgrep -f "kubectl port-forward" | while read -r pid; do
+        line=$(ps -p "$pid" -o command=)
+        service=$(echo "$line" | grep -oE '(service|svc)/[^ ]*' | head -1 | cut -d'/' -f2)
+        port=$(echo "$line" | grep -oE '[0-9]+:[0-9]+' | head -1 | cut -d':' -f1)
+        namespace=$(echo "$line" | sed -nE 's/.* -n ([^ ]+).*/\1/p' | head -1)
+
+        if [ -n "$service" ] && [ -n "$port" ]; then
+            printf "${GREEN}%-7s${NC} ${YELLOW}%-7s${NC} %-24s %s\n" "$pid" "$port" "$service" "${namespace:-default}"
+        fi
+    done
+
+    echo ""
+    log_info "To kill a specific port-forward: ${YELLOW}kill <PID>${NC}"
+    log_info "To kill all port-forwards: ${YELLOW}./port-forward.sh stop${NC}"
+    echo ""
+}
 
 start_forwards() {
     log_info "Starting port forwards..."

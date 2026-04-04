@@ -37,7 +37,68 @@ log_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+has_existing_repo_secret() {
+    kubectl -n argocd get secret repo-argocd-local >/dev/null 2>&1
+}
+
+git_creds_file_is_placeholder() {
+    local creds_file=$1
+
+    if grep -Eq '^[[:space:]]*username:[[:space:]]*(<GITHUB_USERNAME>|CHANGE_ME|""|)$' "$creds_file"; then
+        return 0
+    fi
+
+    if grep -Eq '^[[:space:]]*password:[[:space:]]*(<GITHUB_PAT>|CHANGE_ME|""|)$' "$creds_file"; then
+        return 0
+    fi
+
+    return 1
+}
+
 MINIKUBE_PROFILE="minikube"
+CLUSTER_PROVIDER="minikube"
+
+usage() {
+    cat <<EOF
+Usage: ./setup.sh [--cluster minikube|orbstack]
+
+Options:
+  --cluster   Kubernetes provider to use.
+              minikube (default): start/recover Minikube automatically.
+              orbstack: switch to OrbStack kube context and use existing cluster.
+EOF
+}
+
+parse_args() {
+    while [ "$#" -gt 0 ]; do
+        case "$1" in
+            --cluster)
+                if [ -z "${2:-}" ]; then
+                    log_error "Missing value for --cluster"
+                    usage
+                    exit 1
+                fi
+                CLUSTER_PROVIDER="$2"
+                shift 2
+                ;;
+            -h|--help)
+                usage
+                exit 0
+                ;;
+            *)
+                log_error "Unknown argument: $1"
+                usage
+                exit 1
+                ;;
+        esac
+    done
+
+    if [ "$CLUSTER_PROVIDER" != "minikube" ] && [ "$CLUSTER_PROVIDER" != "orbstack" ]; then
+        log_error "Unsupported --cluster value: $CLUSTER_PROVIDER"
+        usage
+        exit 1
+    fi
+}
 
 ensure_minikube_context() {
     log_info "Refreshing kube context for Minikube profile: $MINIKUBE_PROFILE"
@@ -79,6 +140,21 @@ start_or_recover_minikube() {
     exit 1
 }
 
+ensure_orbstack_context() {
+    local orbstack_context="orbstack"
+
+    if ! kubectl config get-contexts -o name | grep -qx "$orbstack_context"; then
+        log_error "Kubernetes context '$orbstack_context' not found"
+        log_info "Open OrbStack and enable Kubernetes first, then retry."
+        log_info "You can check contexts with: kubectl config get-contexts"
+        exit 1
+    fi
+
+    log_info "Switching kube context to OrbStack..."
+    kubectl config use-context "$orbstack_context" >/dev/null
+    log_success "Using Kubernetes context: $orbstack_context"
+}
+
 ensure_cluster_reachable() {
     local retries=30
     local delay=2
@@ -89,8 +165,12 @@ ensure_cluster_reachable() {
     fi
 
     if ! kubectl cluster-info >/dev/null 2>&1; then
-        log_warning "Kubernetes API is not reachable. Refreshing Minikube context..."
-        minikube update-context >/dev/null 2>&1 || true
+        if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
+            log_warning "Kubernetes API is not reachable. Refreshing Minikube context..."
+            minikube update-context >/dev/null 2>&1 || true
+        else
+            log_warning "Kubernetes API is not reachable on OrbStack context."
+        fi
     fi
 
     while [ "$retries" -gt 0 ]; do
@@ -105,26 +185,93 @@ ensure_cluster_reachable() {
 
     log_error "Kubernetes cluster is still unreachable."
     log_info "Run these checks manually:"
-    log_info "  minikube status"
+    if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
+        log_info "  minikube status"
+        log_info "  minikube update-context"
+    else
+        log_info "  kubectl config use-context orbstack"
+        log_info "  kubectl cluster-info"
+        log_info "  (Open OrbStack and confirm Kubernetes is enabled)"
+    fi
     log_info "  kubectl config current-context"
-    log_info "  minikube update-context"
     exit 1
 }
 
 wait_for_namespace() {
     local namespace=$1
     log_info "Waiting for namespace $namespace to be ready..."
-    kubectl wait --for=condition=Ready --all pods -n "$namespace" --timeout=300s 2>/dev/null || true
+
+    # Ignore completed/failed pods (for example one-shot init Jobs),
+    # otherwise `kubectl wait --all` can block until timeout.
+    local active_pods
+    active_pods=$(kubectl get pods -n "$namespace" \
+        --field-selector=status.phase!=Succeeded,status.phase!=Failed \
+        -o name 2>/dev/null || true)
+
+    if [ -z "$active_pods" ]; then
+        log_warning "No active pods found in namespace $namespace"
+        return 0
+    fi
+
+    if ! kubectl wait --for=condition=Ready -n "$namespace" --timeout=180s $active_pods 2>/dev/null; then
+        log_warning "Some active pods in namespace $namespace were not ready before timeout"
+    fi
+}
+
+wait_for_applications_sync() {
+    local timeout_seconds=120
+    local interval_seconds=5
+    local elapsed=0
+
+    log_info "Waiting for ArgoCD applications to sync (up to ${timeout_seconds}s)..."
+
+    while [ "$elapsed" -lt "$timeout_seconds" ]; do
+        local app_count
+        app_count=$(kubectl get applications.argoproj.io -n argocd --no-headers 2>/dev/null | wc -l | tr -d ' ')
+
+        if [ "$app_count" -eq 0 ]; then
+            sleep "$interval_seconds"
+            elapsed=$((elapsed + interval_seconds))
+            continue
+        fi
+
+        local sync_values
+        local health_values
+        local not_synced
+        local not_healthy
+
+        sync_values=$(kubectl get applications.argoproj.io -n argocd -o jsonpath='{range .items[*]}{.status.sync.status}{"\n"}{end}' 2>/dev/null || true)
+        health_values=$(kubectl get applications.argoproj.io -n argocd -o jsonpath='{range .items[*]}{.status.health.status}{"\n"}{end}' 2>/dev/null || true)
+
+        not_synced=$(echo "$sync_values" | grep -vc '^Synced$' || true)
+        not_healthy=$(echo "$health_values" | grep -Evc '^(Healthy|Suspended)$' || true)
+
+        if [ "$not_synced" -eq 0 ] && [ "$not_healthy" -eq 0 ]; then
+            log_success "ArgoCD applications are synced and healthy"
+            return 0
+        fi
+
+        sleep "$interval_seconds"
+        elapsed=$((elapsed + interval_seconds))
+    done
+
+    log_warning "Application sync is still in progress; continuing setup"
 }
 
 # =============================================================================
-# 1. Start Minikube
+# 1. Prepare Kubernetes Cluster
 # =============================================================================
-start_or_recover_minikube
+parse_args "$@"
 
-# Wait for Minikube to be fully ready
-log_info "Waiting for Minikube to be ready..."
-sleep 10
+if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
+    start_or_recover_minikube
+
+    # Wait for Minikube to be fully ready
+    log_info "Waiting for Minikube to be ready..."
+    sleep 5
+else
+    ensure_orbstack_context
+fi
 
 log_info "Verifying Kubernetes connection..."
 ensure_cluster_reachable
@@ -180,18 +327,31 @@ log_info "Deploying Root Application via ArgoCD (App of Apps pattern)..."
 
 # First, apply git repository secret
 if [ -f "bootstrap/repo-secret/git-creds.yaml" ]; then
-    log_info "Applying Git credentials..."
-    kubectl apply -f bootstrap/repo-secret/git-creds.yaml 2>/dev/null || log_warning "Git credentials already applied"
+    if git_creds_file_is_placeholder "bootstrap/repo-secret/git-creds.yaml"; then
+        if has_existing_repo_secret; then
+            log_info "git-creds.yaml still has placeholders; using existing repo secret in cluster"
+        else
+            log_warning "git-creds.yaml still has placeholders and no repo secret exists in cluster"
+            log_info "Run ./bootstrap/repo-secret/apply-git-creds.sh to apply credentials securely"
+        fi
+    else
+        log_info "Applying Git credentials..."
+        kubectl apply -f bootstrap/repo-secret/git-creds.yaml >/dev/null 2>&1 || log_warning "Git credentials apply returned non-zero"
+    fi
 else
-    log_warning "Git credentials not found at bootstrap/repo-secret/git-creds.yaml"
+    if has_existing_repo_secret; then
+        log_info "Git credentials file not found; using existing repo secret in cluster"
+    else
+        log_warning "Git credentials file not found and no repo secret exists in cluster"
+        log_info "Run ./bootstrap/repo-secret/apply-git-creds.sh to apply credentials securely"
+    fi
 fi
 
 # Then deploy the root-app bootstrap
 log_info "Applying root-app bootstrap..."
 kubectl apply -f bootstrap/bootstrap.yaml 2>/dev/null || log_warning "Bootstrap already applied"
 
-log_info "Waiting for applications to sync (30 seconds)..."
-sleep 30
+wait_for_applications_sync
 
 # =============================================================================
 # 4. Get Passwords
@@ -298,7 +458,7 @@ log_success "Port forwarding is active!"
 echo ""
 log_success "==================== SETUP COMPLETE ===================="
 echo ""
-echo -e "${GREEN}✓${NC} Minikube running"
+echo -e "${GREEN}✓${NC} Kubernetes provider: ${YELLOW}${CLUSTER_PROVIDER}${NC}"
 echo -e "${GREEN}✓${NC} ArgoCD installed"
 echo -e "${GREEN}✓${NC} Port forwarding active"
 echo ""
@@ -320,6 +480,10 @@ if [ -n "$GRAFANA_PASSWORD" ]; then
 fi
 echo ""
 log_info "To stop port forwarding: ${YELLOW}kill \$(jobs -p)${NC}"
-log_info "To stop Minikube: ${YELLOW}minikube stop${NC}"
+if [ "$CLUSTER_PROVIDER" = "minikube" ]; then
+    log_info "To stop Minikube: ${YELLOW}minikube stop${NC}"
+else
+    log_info "To stop OrbStack Kubernetes: disable Kubernetes in OrbStack UI"
+fi
 echo ""
 log_success "========================================================"
