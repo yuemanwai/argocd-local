@@ -11,6 +11,11 @@ metadata:
     {{- end }}
 spec:
   {{- $appSecretName := include "jp.appSecretName" . }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 5 }}
+  progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds | default 180 }}
+  minReadySeconds: {{ .Values.minReadySeconds | default 10 }}
+  strategy:
+    {{- toYaml (.Values.deploymentStrategy | default (dict "type" "RollingUpdate" "rollingUpdate" (dict "maxUnavailable" 0 "maxSurge" 1))) | nindent 4 }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}

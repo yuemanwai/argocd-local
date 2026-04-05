@@ -34,6 +34,8 @@ database:
   port: 5432 # 雖然 Terraform 無俾，但寫定喺度最穩陣
 
 # 5. Production 級別嘅資源分配 (你可以根據 t3.medium 嘅負荷微調)
+replicaCount: 3
+
 resources:
   requests:
     cpu: "0.1"
@@ -41,6 +43,15 @@ resources:
   limits:
     cpu: "0.5"
     memory: 1024Mi
+
+deploymentStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+minReadySeconds: 10
+progressDeadlineSeconds: 180
+revisionHistoryLimit: 5
 
 # 6. (選填) 如果你準備好要打開 Ingress，就 Uncomment 下面。
 # 如果你想跟之前計劃，先 Port-forward 測試，就 Keep 住 enabled: false
