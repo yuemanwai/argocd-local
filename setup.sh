@@ -206,6 +206,43 @@ ensure_cluster_reachable() {
     exit 1
 }
 
+ensure_metrics_server() {
+    local apiservice="v1beta1.metrics.k8s.io"
+    local retries=30
+
+    print_section "1.1 Ensure Metrics API"
+
+    if kubectl get apiservice "$apiservice" >/dev/null 2>&1; then
+        log_info "metrics-server APIService already exists"
+    else
+        log_info "Installing metrics-server..."
+        kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml >/dev/null
+        log_success "metrics-server manifests applied"
+    fi
+
+    log_info "Patching metrics-server args for local kubelet TLS/address compatibility..."
+    kubectl -n kube-system patch deployment metrics-server --type='json' \
+        -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]' >/dev/null 2>&1 || true
+    kubectl -n kube-system patch deployment metrics-server --type='json' \
+        -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-preferred-address-types=InternalIP,Hostname,ExternalIP"}]' >/dev/null 2>&1 || true
+
+    log_info "Waiting for metrics API to report Available=True..."
+    while [ "$retries" -gt 0 ]; do
+        local available
+        available=$(kubectl get apiservice "$apiservice" -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || true)
+
+        if [ "$available" = "True" ]; then
+            log_success "Metrics API is available"
+            return 0
+        fi
+
+        retries=$((retries - 1))
+        sleep 2
+    done
+
+    log_warning "Metrics API is not available yet. Setup will continue, but HPA may show <unknown> temporarily."
+}
+
 wait_for_namespace() {
     local namespace=$1
     log_info "Waiting for namespace $namespace to be ready..."
@@ -282,6 +319,7 @@ fi
 
 log_info "Verifying Kubernetes connection..."
 ensure_cluster_reachable
+ensure_metrics_server
 
 print_section "2. Install ArgoCD"
 log_info "Checking ArgoCD Helm repository..."

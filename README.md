@@ -53,6 +53,8 @@ You should see an `orbstack` context.
 
 This keeps your original Minikube flow intact, so you can still use old Windows setup when needed.
 
+Setup now auto-ensures metrics-server (including local kubelet TLS compatibility flags), so HPA and kubectl top work after bootstrap without extra manual install.
+
 ---
 
 ## 🔄 ArgoCD Management
