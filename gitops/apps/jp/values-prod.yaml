@@ -52,6 +52,15 @@ deploymentStrategy:
 minReadySeconds: 10
 progressDeadlineSeconds: 180
 revisionHistoryLimit: 5
+rollout:
+  enabled: true
+  activeServiceName: ""
+  previewServiceName: ""
+  autoPromotionEnabled: false
+  autoPromotionSeconds: null
+  scaleDownDelaySeconds: 30
+  abortScaleDownDelaySeconds: 30
+  progressDeadlineAbort: true
 
 # 6. (選填) 如果你準備好要打開 Ingress，就 Uncomment 下面。
 # 如果你想跟之前計劃，先 Port-forward 測試，就 Keep 住 enabled: false

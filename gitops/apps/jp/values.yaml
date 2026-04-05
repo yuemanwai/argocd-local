@@ -76,6 +76,19 @@ deploymentStrategy:
 minReadySeconds: 10
 progressDeadlineSeconds: 180
 revisionHistoryLimit: 5
+rollout:
+  enabled: true
+  # Leave empty to use chart default service names.
+  activeServiceName: ""
+  previewServiceName: ""
+  # false means manual promotion (pause before switching preview -> active).
+  autoPromotionEnabled: false
+  # Optional: set seconds for timed promotion when autoPromotionEnabled=true.
+  autoPromotionSeconds: null
+  scaleDownDelaySeconds: 30
+  abortScaleDownDelaySeconds: 30
+  # Abort rollout automatically when progress deadline is exceeded.
+  progressDeadlineAbort: true
 # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
 startupProbe:
   httpGet:

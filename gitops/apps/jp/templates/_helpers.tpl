@@ -78,3 +78,17 @@ Resolve database host by environment.
 {{- required "database.host is required when localdb.enabled=false" .Values.database.host -}}
 {{- end -}}
 {{- end }}
+
+{{/*
+Resolve active service name for Blue-Green rollout.
+*/}}
+{{- define "jp.activeServiceName" -}}
+{{- default (include "jp.fullname" .) .Values.rollout.activeServiceName -}}
+{{- end }}
+
+{{/*
+Resolve preview service name for Blue-Green rollout.
+*/}}
+{{- define "jp.previewServiceName" -}}
+{{- default (printf "%s-preview" (include "jp.fullname" .)) .Values.rollout.previewServiceName -}}
+{{- end }}

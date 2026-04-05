@@ -1,12 +1,11 @@
-{{- if not .Values.rollout.enabled }}
-apiVersion: apps/v1
-kind: Deployment
+{{- if .Values.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: {{ include "jp.fullname" . }}
   labels:
     {{- include "jp.labels" . | nindent 4 }}
   annotations:
-    # argocd.argoproj.io/sync-wave: "1"
     {{- with .Values.deploymentAnnotations }}
       {{- toYaml . | nindent 4 }}
     {{- end }}
@@ -14,15 +13,26 @@ spec:
   {{- $appSecretName := include "jp.appSecretName" . }}
   revisionHistoryLimit: {{ .Values.revisionHistoryLimit | default 5 }}
   progressDeadlineSeconds: {{ .Values.progressDeadlineSeconds | default 180 }}
+  progressDeadlineAbort: {{ .Values.rollout.progressDeadlineAbort | default true }}
   minReadySeconds: {{ .Values.minReadySeconds | default 10 }}
-  strategy:
-    {{- toYaml (.Values.deploymentStrategy | default (dict "type" "RollingUpdate" "rollingUpdate" (dict "maxUnavailable" 0 "maxSurge" 1))) | nindent 4 }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
       {{- include "jp.selectorLabels" . | nindent 6 }}
+  strategy:
+    blueGreen:
+      activeService: {{ include "jp.activeServiceName" . }}
+      previewService: {{ include "jp.previewServiceName" . }}
+      autoPromotionEnabled: {{ .Values.rollout.autoPromotionEnabled | default false }}
+      scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds | default 30 }}
+      abortScaleDownDelaySeconds: {{ .Values.rollout.abortScaleDownDelaySeconds | default 30 }}
+      {{- if hasKey .Values.rollout "autoPromotionSeconds" }}
+      {{- if .Values.rollout.autoPromotionSeconds }}
+      autoPromotionSeconds: {{ .Values.rollout.autoPromotionSeconds }}
+      {{- end }}
+      {{- end }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
