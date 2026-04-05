@@ -11,11 +11,11 @@ localdb:
 replicaCount: 1
 # This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
 image:
-  repository: docker.io/yuemanwai/fyp-jp
+  repository: docker.io/yuemanwai/fyp-jp-dev
   # This sets the pull policy for images.
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: b4a1e5f
+  tag: 89ffd69
 # Application container port
 containerPort: 5000
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
