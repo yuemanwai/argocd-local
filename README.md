@@ -7,6 +7,7 @@ Kubernetes manifest for learning Argo CD
 - [ArgoCD Management](#argocd-management)
 - [Helm Operations](#helm-operations)
 - [Port Forwarding](#port-forwarding)
+- [Argo Rollouts: Blue-Green Deployment Workflow](#-argo-rollouts-blue-green-deployment-workflow)
 - [Monitoring Stack](#monitoring-stack)
 - [Kubernetes Utils](#kubernetes-utils)
 
@@ -149,10 +150,153 @@ k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /d
 ```
 Access at: http://localhost:9000
 
+### Application Preview Service (Argo Rollouts)
+When Blue-Green Rollout is enabled, the preview service allows testing new versions before switching live traffic:
+
+```bash
+# Automatically managed by port-forward.sh, but manual forward:
+k port-forward service/my-app-jp-preview 8081:5000 > /dev/null 2>&1 &
+```
+Access preview at: http://localhost:8081
+
 ### Kill All Port-Forward Processes
 ```bash
 kill $(jobs -p)
 ```
+
+---
+
+## 🚀 Argo Rollouts: Blue-Green Deployment Workflow
+
+### 📋 Prerequisites
+- Install Argo Rollouts CLI (auto-installed via setup.sh):
+  ```bash
+  brew install argoproj/tap/kubectl-argo-rollouts
+  kubectl argo rollouts version
+  ```
+
+### 📌 Real-World Deployment Workflow
+
+#### 1️⃣ **Prepare & Commit New Version**
+```bash
+# Update docker image tag in values.yaml
+edit gitops/apps/jp/values.yaml
+# Change image.tag from <current> to <new-tag>
+
+# Commit and push to Git
+git add gitops/apps/jp/values.yaml
+git commit -m "chore: upgrade my-app-jp to tag <new-tag>"
+git push origin main
+```
+
+#### 2️⃣ **Monitor Rollout Progress**
+ArgoCD auto-syncs and triggers the Rollout. Open 3 terminals:
+
+```bash
+# Terminal 1: Watch Rollout state changes (5s auto-refresh)
+kubectl argo rollouts get rollout my-app-jp -n default -w
+
+# Terminal 2: Watch Pod status (show Blue/Green instances)
+kubectl get pods -n default -l app=my-app-jp -w
+
+# Terminal 3: Watch Events (Rollout messages, errors, state transitions)
+kubectl get events -n default -w --field-selector involvedObject.name=my-app-jp
+```
+
+#### 3️⃣ **Test Preview Service (New Version)**
+```bash
+# Port-forward already running via ./port-forward.sh start
+# Or manual:
+kubectl port-forward svc/my-app-jp-preview 8081:5000 &
+
+# Test new version in browser or via curl
+curl http://localhost:8081/health
+# Verify logs, metrics, functionality...
+```
+
+#### 4️⃣ **Validate and Promote to Active**
+Once preview is verified stable:
+
+```bash
+# ✅ Option A: Using Argo Rollouts CLI (recommended)
+kubectl argo rollouts promote my-app-jp -n default
+
+# ✅ Option B: Using kubectl patch (no CLI needed)
+kubectl patch rollout my-app-jp -n default --type merge \
+  -p '{"status":{"promotionApproved":true}}'
+```
+
+**What happens after promotion:**
+- Active service (`my-app-jp`) switches to new version pods
+- Preview service (`my-app-jp-preview`) is decommissioned after 30s
+- Old pods gradually scale down
+
+#### 5️⃣ **Observe Traffic Switch**
+Monitor the transition:
+```bash
+# Watch new version take over
+kubectl argo rollouts get rollout my-app-jp -n default -w
+
+# Verify active service now points to new pods
+kubectl get pods -n default -l app=my-app-jp --show-labels
+
+# Check application is responsive on active endpoint
+curl http://localhost:8080/health
+```
+
+### ❌ **Rollback / Abort (If Issues Found)**
+
+```bash
+# ❌ Option A: Using CLI (immediate abort)
+kubectl argo rollouts abort my-app-jp -n default
+
+# ❌ Option B: Using kubectl patch
+kubectl patch rollout my-app-jp -n default --type merge \
+  -p '{"status":{"abortStatus":"true"}}'
+```
+
+**What happens after abort:**
+- Preview pods are immediately terminated
+- Active service remains on old version (zero downtime)
+- Pod cleanup respects `abortScaleDownDelaySeconds` (30s by default)
+
+### 📊 **Monitor via ArgoCD Dashboard**
+
+1. Open ArgoCD: https://localhost:8090
+2. Navigate to: **Applications → my-app → Resources**
+3. Look for **Rollout/my-app-jp** resource
+4. Click it to see:
+   - Blue-Green strategy details
+   - Current phase (Progressing, Paused, Succeeded, Failed)
+   - Active/Preview service mapping
+   - Pod replica counts
+   - Recent events
+
+### 🔍 **Diagnostic Commands**
+
+```bash
+# Show full Rollout spec + current status
+kubectl describe rollout my-app-jp -n default
+
+# Show just the Blue-Green state
+kubectl get rollout my-app-jp -n default -o jsonpath='{.status.blueGreen}'
+
+# Show recent events for Rollout
+kubectl get events -n default --field-selector involvedObject.name=my-app-jp --sort-by='.lastTimestamp' | head -20
+
+# Show why Rollout is stuck (if promoted=false)
+kubectl logs -n argo-rollouts -l app.kubernetes.io/name=argo-rollouts -f
+```
+
+### ✅ **Quick Reference Table**
+
+| Task | Command |
+|------|---------|
+| Watch rollout progress | `kubectl argo rollouts get rollout my-app-jp -n default -w` |
+| Promote to active | `kubectl argo rollouts promote my-app-jp -n default` |
+| Abort deployment | `kubectl argo rollouts abort my-app-jp -n default` |
+| Show full status | `kubectl describe rollout my-app-jp -n default` |
+| Monitor events | `kubectl get events -n default -w --field-selector involvedObject.name=my-app-jp` |
 
 ---
 

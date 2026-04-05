@@ -172,6 +172,16 @@ start_forwards() {
         fi
     fi
     
+    # Application Preview (my-app-jp-preview) - for Argo Rollouts Blue-Green testing
+    if kubectl get service my-app-jp-preview -n default &>/dev/null; then
+        if ! pgrep -f "port-forward.sh watch my-app-jp-preview default 8081 5000" >/dev/null 2>&1; then
+            start_watch_forward "my-app-jp-preview" "default" "8081" "5000"
+            log_success "Application Preview (my-app-jp-preview): http://localhost:8081"
+        else
+            log_info "Application Preview (my-app-jp-preview) auto-reconnect watcher already running"
+        fi
+    fi
+    
     # Grafana (from kube-prometheus-stack)
     if kubectl get namespace monitoring &>/dev/null; then
         if ! pgrep -f "port-forward.sh watch kube-prometheus-stack-grafana monitoring 3000 80" >/dev/null 2>&1; then
