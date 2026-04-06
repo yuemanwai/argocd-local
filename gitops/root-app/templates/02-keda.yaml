@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/argoproj/argo-cd/master/manifests/crds/application-crd.yaml
+{{- $stage := default "local" .Values.env.stage }}
+{{- if ne $stage "prod" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: keda
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://kedacore.github.io/charts
+    chart: keda
+    targetRevision: 2.19.0
+    helm:
+      values: |
+        crds:
+          install: true
+        operator:
+          replicaCount: 1
+
+  destination:
+    server: {{ .Values.spec.destination.server }}
+    namespace: keda
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}

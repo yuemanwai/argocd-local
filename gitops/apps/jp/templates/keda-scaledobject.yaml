@@ -1,0 +1,28 @@
+{{- if .Values.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "jp.fullname" . }}
+  labels:
+    {{- include "jp.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: {{ include "jp.fullname" . }}
+  minReplicaCount: {{ .Values.keda.minReplicaCount | default 1 }}
+  maxReplicaCount: {{ .Values.keda.maxReplicaCount | default 3 }}
+  pollingInterval: {{ .Values.keda.pollingInterval | default 30 }}
+  cooldownPeriod: {{ .Values.keda.cooldownPeriod | default 300 }}
+  fallback:
+    failureThreshold: 3
+    replicas: {{ .Values.keda.minReplicaCount | default 1 }}
+  triggers:
+    - type: prometheus
+      metadata:
+        serverAddress: {{ .Values.keda.prometheusServerAddress | quote }}
+        metricName: flask_http_request_rate
+        query: {{ .Values.keda.query | quote }}
+        threshold: {{ .Values.keda.threshold | quote }}
+        activationThreshold: {{ .Values.keda.activationThreshold | quote }}
+{{- end }}

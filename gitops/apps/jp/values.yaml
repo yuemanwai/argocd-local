@@ -143,11 +143,24 @@ service:
 # Horizontal Pod Autoscaler Settings
 # ================================================================
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 60
   targetMemoryUtilizationPercentage: 60
+# ================================================================
+# KEDA Settings
+# ================================================================
+keda:
+  enabled: true
+  pollingInterval: 30
+  cooldownPeriod: 300
+  minReplicaCount: 1
+  maxReplicaCount: 3
+  prometheusServerAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+  query: sum(rate(flask_http_request_total{service="my-app-jp"}[2m]))
+  threshold: "1"
+  activationThreshold: "0.1"
 # ================================================================
 # Job Settings - init-db and seed test-data
 # ================================================================
