@@ -157,7 +157,7 @@ keda:
   cooldownPeriod: 300
   minReplicaCount: 1
   maxReplicaCount: 3
-  prometheusServerAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+  prometheusServerAddress: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:80
   query: sum(rate(flask_http_request_total{service="my-app-jp"}[2m]))
   threshold: "1"
   activationThreshold: "0.1"
