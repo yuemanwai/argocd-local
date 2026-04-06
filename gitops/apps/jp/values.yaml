@@ -143,7 +143,7 @@ service:
 # Horizontal Pod Autoscaler Settings
 # ================================================================
 autoscaling:
-  enabled: false
+  enabled: true
   minReplicas: 1
   maxReplicas: 3
   targetCPUUtilizationPercentage: 60
