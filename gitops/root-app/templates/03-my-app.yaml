@@ -10,6 +10,12 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 
 spec:
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Rollout
+      name: my-app-jp
+      jsonPointers:
+        - /spec/replicas
   {{- $stage := default "local" .Values.env.stage }}
   {{- $useProdValues := eq $stage "prod" }}
   project: default
