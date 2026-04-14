@@ -78,7 +78,37 @@ kube-prometheus-stack:
           cpu: 100m
           memory: 512Mi
 
-  # 4. 關閉一堆你暫時用唔著嘅 K8s 元件監控 (慳資源)
+  # 4. 開返 dashboard 最必要嘅 K8s 監控 (輕量優先)
+  kubeApiServer:
+    enabled: true
+  kubelet:
+    enabled: true
+    serviceMonitor:
+      cAdvisor: true
+  kubeStateMetrics:
+    enabled: true
+  nodeExporter:
+    enabled: true
+
+  # 5. 對必需 exporter 加低資源 request/limit，避免再推高 RAM
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 150m
+        memory: 256Mi
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 20m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 128Mi
+
+  # 6. 繼續關閉重型/通常無需要嘅 control-plane 元件監控 (慳資源)
   kubeControllerManager:
     enabled: false
   kubeEtcd:
@@ -86,7 +116,7 @@ kube-prometheus-stack:
   kubeScheduler:
     enabled: false
   coreDns:
-    enabled: false
+    enabled: true
   kubeProxy:
     enabled: false
 
