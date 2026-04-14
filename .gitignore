@@ -26,3 +26,6 @@
 
 # files for testing
 kps-values.yaml
+
+# Ignore all markdown files related to observability documentation
+OBSERVABILITY_*.md
