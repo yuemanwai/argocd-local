@@ -85,6 +85,36 @@ kube-prometheus-stack:
     enabled: true
     serviceMonitor:
       cAdvisor: true
+      # Keep useful cAdvisor series but do not drop container_network_*;
+      # this is needed by kubernetes-mixin networking dashboards.
+      cAdvisorMetricRelabelings:
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_memory_(mapped_file|swap)'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_(file_descriptors|tasks_state|threads_max)'
+        - sourceLabels: [__name__, scope]
+          action: drop
+          regex: 'container_memory_failures_total;hierarchy'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_network_(receive|transmit)_(compressed|multicast|collisions|fifo|frame|carrier|nohandler)_total'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_network_(receive|transmit)_packets_total'
+        - sourceLabels: [__name__]
+          action: drop
+          regex: 'container_spec.*'
+        - sourceLabels: [id, pod]
+          action: drop
+          regex: '.+;'
   kubeStateMetrics:
     enabled: true
   nodeExporter:
@@ -108,17 +138,17 @@ kube-prometheus-stack:
         cpu: 100m
         memory: 128Mi
 
-  # 6. 繼續關閉重型/通常無需要嘅 control-plane 元件監控 (慳資源)
+  # 6. 一口氣開齊 control-plane 監控 (學習 observability 全貌)
   kubeControllerManager:
-    enabled: false
+    enabled: true
   kubeEtcd:
-    enabled: false
+    enabled: true
   kubeScheduler:
-    enabled: false
+    enabled: true
   coreDns:
     enabled: true
   kubeProxy:
-    enabled: false
+    enabled: true
 
   # additionalPrometheusRulesMap:
   #   # 呢粒 key 你鍾意叫乜都得，通常叫 kubecost-rules
