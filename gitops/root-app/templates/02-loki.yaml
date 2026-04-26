@@ -48,5 +48,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - PruneLast=true
       - PrunePropagationPolicy=foreground
 {{- end }}
