@@ -140,33 +140,32 @@ remove_finalizers() {
     fi
 }
 
-print_section "1. Delete Bootstrap and Remove Finalizers"
-log_info "Deleting root app and cleaning up stuck finalizers..."
+print_section "1. Delete ArgoCD Applications (cascade delete)"
+log_info "Deleting ArgoCD applications with cascade delete to auto-cleanup managed resources..."
 
-# Delete bootstrap
+# First, let ArgoCD clean up all managed resources by deleting Applications
+# with cascade=foreground (wait for finalizers to finish)
+log_info "Deleting all ArgoCD Applications with cascade delete..."
+kubectl delete applications --all --all-namespaces --cascade=foreground --grace-period=30 2>/dev/null || true
+sleep 3
+
+# Delete bootstrap Application directly
 if [ -f "bootstrap/bootstrap.yaml" ]; then
-    kubectl delete -f bootstrap/bootstrap.yaml --wait=false 2>/dev/null || true
+    log_info "Deleting bootstrap application..."
+    kubectl delete -f bootstrap/bootstrap.yaml --cascade=foreground --grace-period=30 2>/dev/null || true
 fi
 sleep 2
 
-# Remove finalizers from Applications
-log_info "Removing finalizers from ArgoCD Applications..."
-for app in $(kubectl get applications -n argocd -o name 2>/dev/null); do
-    remove_finalizers "$(echo $app | cut -d'/' -f1)" "$(echo $app | cut -d'/' -f2)" "argocd"
-done 2>/dev/null || true
+# Remove any remaining ArgoCD Application finalizers if needed
+log_info "Cleaning up any remaining ArgoCD Application finalizers..."
+kubectl get applications --all-namespaces -o json 2>/dev/null | \
+    jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null | while read ns name; do
+        if [ ! -z "$ns" ] && [ ! -z "$name" ]; then
+            remove_finalizers "application" "$name" "$ns"
+        fi
+    done 2>/dev/null || true
 
-# Delete all applications
-kubectl delete applications --all --all-namespaces --wait=false 2>/dev/null || true
 sleep 2
-
-# Remove finalizers from namespace objects
-log_info "Removing finalizers from namespaces..."
-for ns in argocd monitoring logging loki; do
-    if kubectl get namespace "$ns" 2>/dev/null; then
-        remove_finalizers "namespace" "$ns"
-    fi
-done
-sleep 1
 
 print_section "2. Delete Helm Releases"
 log_info "Uninstalling Helm releases..."
@@ -181,49 +180,73 @@ log_info "Waiting for Helm releases to be removed..."
 sleep 3
 
 print_section "3. Force Delete Stuck Resources"
-log_info "Removing finalizers from PVCs, PVs, and ArgoCD resources..."
+log_info "Removing finalizers from PVCs, PVs, and other stuck resources..."
 
-# Remove finalizers from ArgoCD CRDs
-log_info "Removing finalizers from ArgoCD CRD resources..."
-kubectl get applications.argoproj.io --all-namespaces -o json 2>/dev/null | \
-    grep -o '"namespace":"[^"]*","name":"[^"]*"' 2>/dev/null | while read item; do
-    ns=$(echo "$item" | grep -o '"namespace":"[^"]*"' | cut -d'"' -f4)
-    name=$(echo "$item" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-    remove_finalizers "application" "$name" "$ns"
-done 2>/dev/null || true
-
-# Remove finalizers from all PVCs
+# Remove finalizers from all PVCs across all namespaces
 log_info "Removing finalizers from PersistentVolumeClaims..."
 kubectl get pvc --all-namespaces -o json 2>/dev/null | \
-    grep -o '"namespace":"[^"]*","name":"[^"]*"' 2>/dev/null | while read item; do
-    ns=$(echo "$item" | grep -o '"namespace":"[^"]*"' | cut -d'"' -f4)
-    name=$(echo "$item" | grep -o '"name":"[^"]*"' | cut -d'"' -f4)
-    remove_finalizers "pvc" "$name" "$ns"
-done 2>/dev/null || true
+    jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null | while read ns name; do
+        if [ ! -z "$ns" ] && [ ! -z "$name" ]; then
+            remove_finalizers "pvc" "$name" "$ns"
+        fi
+    done 2>/dev/null || true
 
 # Remove finalizers from PVs
 log_info "Removing finalizers from PersistentVolumes..."
 kubectl get pv -o json 2>/dev/null | \
     jq -r '.items[].metadata.name' 2>/dev/null | while read pv; do
-    remove_finalizers "pv" "$pv"
+        if [ ! -z "$pv" ]; then
+            remove_finalizers "pv" "$pv"
+        fi
+    done 2>/dev/null || true
+
+# Force delete stuck PVCs and PVs
+log_info "Force deleting PersistentVolumeClaims..."
+kubectl delete pvc --all --all-namespaces --grace-period=0 --force 2>/dev/null || true
+
+log_info "Force deleting PersistentVolumes..."
+kubectl delete pv --all --grace-period=0 --force 2>/dev/null || true
+
+sleep 2
+
+print_section "4. Delete Namespaces, CRDs and WebHooks"
+log_info "Deleting managed namespaces, CRDs, WebHooks and cluster roles..."
+
+# Remove webhook configurations that might block namespace deletion
+log_info "Deleting ValidatingWebhookConfigurations and MutatingWebhookConfigurations..."
+kubectl get validatingwebhookconfigurations -o name 2>/dev/null | grep -E 'keda|prometheus|argocd' | while read webhook; do
+    kubectl delete "$webhook" 2>/dev/null || true
+done 2>/dev/null || true
+
+kubectl get mutatingwebhookconfigurations -o name 2>/dev/null | grep -E 'keda|prometheus|argocd' | while read webhook; do
+    kubectl delete "$webhook" 2>/dev/null || true
 done 2>/dev/null || true
 
 sleep 2
 
-print_section "4. Delete Namespaces and CRDs"
-log_info "Deleting managed namespaces, CRDs, and cluster roles..."
-
-# Delete managed namespaces
-for ns in monitoring logging loki argocd; do
+# Delete managed namespaces - try graceful first, then force
+log_info "Deleting managed namespaces..."
+for ns in argocd monitoring logging loki kubecost argo-rollouts keda; do
     if kubectl get namespace "$ns" 2>/dev/null; then
         log_info "Deleting namespace: $ns"
-        kubectl delete namespace "$ns" --grace-period=0 --force 2>/dev/null || true
+        # First attempt with grace period
+        kubectl delete namespace "$ns" --grace-period=10 2>/dev/null || true
+        sleep 1
+        
+        # If still exists, remove finalizers and force delete
+        if kubectl get namespace "$ns" 2>/dev/null; then
+            log_warning "Namespace $ns stuck, removing finalizers..."
+            kubectl patch namespace "$ns" -p '{"metadata":{"finalizers":[]}}' --type=merge 2>/dev/null || true
+            kubectl delete namespace "$ns" --grace-period=0 --force 2>/dev/null || true
+        fi
     fi
 done
 
+sleep 2
+
 # Delete ArgoCD CRDs
-log_info "Deleting ArgoCD CRDs..."
-kubectl get crd -o name 2>/dev/null | grep 'argoproj.io' | while read crd; do
+log_info "Deleting ArgoCD and related CRDs..."
+kubectl get crd -o name 2>/dev/null | grep -E 'argoproj.io|keda.sh|monitoring.coreos.com|eventing.keda.sh' | while read crd; do
     kubectl delete "$crd" --wait=false 2>/dev/null || true
 done 2>/dev/null || true
 
@@ -234,12 +257,12 @@ kubectl delete pvc --all -n default --wait=false 2>/dev/null || true
 kubectl delete hpa --all -n default --wait=false 2>/dev/null || true
 
 # Delete ClusterRoles and ClusterRoleBindings
-log_info "Deleting ArgoCD cluster roles..."
-kubectl get clusterrole -o name 2>/dev/null | grep 'argocd' | while read role; do
+log_info "Deleting ArgoCD and related cluster roles..."
+kubectl get clusterrole -o name 2>/dev/null | grep -E 'argocd|keda|prometheus' | while read role; do
     kubectl delete "$role" 2>/dev/null || true
 done 2>/dev/null || true
 
-kubectl get clusterrolebinding -o name 2>/dev/null | grep 'argocd' | while read binding; do
+kubectl get clusterrolebinding -o name 2>/dev/null | grep -E 'argocd|keda|prometheus' | while read binding; do
     kubectl delete "$binding" 2>/dev/null || true
 done 2>/dev/null || true
 
