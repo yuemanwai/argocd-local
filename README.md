@@ -1,346 +1,198 @@
-# argocd
-Kubernetes manifest for learning Argo CD
+# GitOps Platform Services
 
-
-## 📋 Table of Contents
-- [Minikube Setup](#minikube-setup)
-- [ArgoCD Management](#argocd-management)
-- [Helm Operations](#helm-operations)
-- [Port Forwarding](#port-forwarding)
-- [Argo Rollouts: Blue-Green Deployment Workflow](#-argo-rollouts-blue-green-deployment-workflow)
-- [Monitoring Stack](#monitoring-stack)
-- [Kubernetes Utils](#kubernetes-utils)
+> GitOps delivery platform built with ArgoCD and Kubernetes.
+>
+> This repository manages Kubernetes workloads and platform services through declarative GitOps workflows. It serves as the deployment layer for the local platform that powers the Japanese Academy application.
 
 ---
 
-## 🚀 Minikube Setup
+## Overview
 
-### Start Minikube (Alternative to k3s)
-```bash
-minikube start --memory 8192 --cpus 6 --addons=metrics-server
-```
+This repository contains the Kubernetes manifests, Helm values, ArgoCD Applications, and supporting scripts required to operate the local GitOps stack.
 
-### Run Project Setup (Minikube mode, default)
-```bash
-./setup.sh
-# or explicit
-./setup.sh --cluster minikube
-```
+Application deployment and platform services are managed through a dedicated app-of-apps structure under `gitops/`, while bootstrap resources and helper scripts live in `bootstrap/` and the repository root.
 
-### Check Minikube Resource Usage
-```bash
-docker stats
-```
+Although the repository name is still `argocd-local`, it now covers both local and AWS-style production setups. The name was kept unchanged because other repositories and CI/GitOps paths are sensitive to repository names and folder structure.
+
+The repository was intentionally designed to separate infrastructure provisioning (Terraform), platform operations (GitOps), and application development (Flask) into independent repositories following separation-of-concerns principles.
+
+The environment is controlled from `gitops/root-app/values.yaml` through `env.stage`, which switches the root app between `local` and `prod` values.
+
+The design follows GitOps principles where Git acts as the single source of truth for Kubernetes operations.
 
 ---
 
-## 🍎 OrbStack Kubernetes Setup (macOS)
+## Architecture
 
-### 1) Install OrbStack and enable Kubernetes
-- Install OrbStack from the official website
-- Open OrbStack and enable Kubernetes
-- Confirm context exists:
+![GitOps Architecture Diagram](docs/images/gitops.png)
 
-```bash
-kubectl config get-contexts
-```
+### Key Components
 
-You should see an `orbstack` context.
+* ArgoCD
+* App-of-Apps pattern
+* Argo Rollouts
+* Kube Prometheus Stack
+* Loki
+* Kubecost
+* Japanese Academy application
+* Bootstrap manifests and helper scripts
 
-### 2) Run project setup in OrbStack mode
-```bash
-./setup.sh --cluster orbstack
-```
+### Architecture Highlights
 
-This keeps your original Minikube flow intact, so you can still use old Windows setup when needed.
-
-Setup now auto-ensures metrics-server (including local kubelet TLS compatibility flags), so HPA and kubectl top work after bootstrap without extra manual install.
-
----
-
-## 🔄 ArgoCD Management
-
-### Install ArgoCD via Helm (Alternative to kubectl apply)
-
-#### Add Helm Repository
-```bash
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update
-```
-
-#### Install ArgoCD (Locked Version)
-```bash
-# Lock version to avoid unwanted upgrades
-helm install argocd argo/argo-cd \
-    --namespace argocd \
-    --create-namespace \
-    --values ./infrastructure/argocd/values.yaml \
-    --version 5.51.6
-```
-
-#### Upgrade ArgoCD
-```bash
-# 永遠都要加 --atomic：一係更新成功，一係維持原狀，絕對唔會爛
-helm upgrade --install argocd argo/argo-cd \
-  --namespace argocd \
-  --values ./infrastructure/argocd/values.yaml \
-  --atomic
-```
-
-#### Uninstall ArgoCD
-```bash
-helm uninstall argocd -n argocd
-```
-
-### Setup ArgoCD via Kubectl
-```bash
-k apply -f bootstrap/ -R
-```
-
-### Cleanup ArgoCD Applications
-```bash
-k delete -f bootstrap/ -R
-```
-
-### Get ArgoCD Admin Password
-```bash
-k get secret/argocd-initial-admin-secret -n argocd -o jsonpath={.data.password} | base64 -d
-```
+* Local GitOps control plane managed from `gitops/root-app`
+* Observability stack deployed as separate ArgoCD Applications
+* Progressive delivery enabled through Argo Rollouts blue-green strategy
+* Single repository supporting both local and production environments through environment-specific Helm values
+* Production-style and local configuration split through Helm values
+* Helper scripts for setup, port-forwarding, and cleanup
 
 ---
 
-## 📦 Helm Operations
+## Design Goals
 
-### Display Available Helm Values
-```bash
-helm show values argo-cd --repo https://argoproj.github.io/argo-helm > values.yaml
-```
+This project was built to demonstrate a practical local GitOps platform for development and portfolio use.
 
-### Check All Helm Releases
-```bash
-# List all releases across namespaces
-helm list -A
+Key objectives included:
 
-# Get current values
-helm get values argocd -n argocd > current-values.yaml
-
-# Get all values (including defaults)
-helm get values argocd -n argocd --all > all-values.yaml
-```
+* Declarative application delivery
+* Clear separation between platform services and application workloads
+* Observability for local Kubernetes workloads
+* Progressive delivery with preview and promotion flow
+* Reusable environment-specific configuration
+* Easy bootstrap and teardown for local cluster experiments
 
 ---
 
-## 🌐 Port Forwarding
+## Platform Components
 
-### ArgoCD Web UI
-```bash
-k port-forward service/argocd-server 8090:443 -n argocd > /dev/null 2>&1 &
-```
-Access at: https://localhost:8090
+### GitOps Layer
 
-### Application Service
-```bash
-k port-forward service/my-app-jp 8080:5000 > /dev/null 2>&1 &
-```
-Access at: http://localhost:8080
+* ArgoCD root application
+* App-of-apps structure
+* Automated synchronization
+* Declarative deployments
 
-### Kubernetes Dashboard
-```bash
-k port-forward service/kubernetes-dashboard 9000:80 -n kubernetes-dashboard > /dev/null 2>&1 &
-```
-Access at: http://localhost:9000
+### Application Layer
 
-### Application Preview Service (Argo Rollouts)
-When Blue-Green Rollout is enabled, the preview service allows testing new versions before switching live traffic:
+* Japanese Academy Flask web app
+* Local and production values files
+* Rollout-based deployment strategy
+* Database and secret configuration
 
-```bash
-# Automatically managed by port-forward.sh, but manual forward:
-k port-forward service/my-app-jp-preview 8081:5000 > /dev/null 2>&1 &
-```
-Access preview at: http://localhost:8081
+### Observability Layer
 
-### Kill All Port-Forward Processes
-```bash
-kill $(jobs -p)
-```
+* kube-prometheus-stack
+* Grafana dashboards
+* Loki logging stack
+* Application and platform visibility
 
----
+### Cost Management Layer
 
-## 🚀 Argo Rollouts: Blue-Green Deployment Workflow
+* Kubecost wrapper chart
+* Cluster cost visibility
+* Namespace-level analysis
 
-### 📋 Prerequisites
-- Install Argo Rollouts CLI (auto-installed via setup.sh):
-  ```bash
-  brew install argoproj/tap/kubectl-argo-rollouts
-  kubectl argo rollouts version
-  ```
+### Bootstrap and Utilities
 
-### 📌 Real-World Deployment Workflow
-
-#### 1️⃣ **Prepare & Commit New Version**
-```bash
-# Update docker image tag in values.yaml
-edit gitops/apps/jp/values.yaml
-# Change image.tag from <current> to <new-tag>
-
-# Commit and push to Git
-git add gitops/apps/jp/values.yaml
-git commit -m "chore: upgrade my-app-jp to tag <new-tag>"
-git push origin main
-```
-
-#### 2️⃣ **Monitor Rollout Progress**
-ArgoCD auto-syncs and triggers the Rollout. Open 3 terminals:
-
-```bash
-# Terminal 1: Watch Rollout state changes (5s auto-refresh)
-kubectl argo rollouts get rollout my-app-jp -n default -w
-
-# Terminal 2: Watch Pod status (show Blue/Green instances)
-kubectl get pods -n default -l app=my-app-jp -w
-
-# Terminal 3: Watch Events (Rollout messages, errors, state transitions)
-kubectl get events -n default -w --field-selector involvedObject.name=my-app-jp
-```
-
-#### 3️⃣ **Test Preview Service (New Version)**
-```bash
-# Port-forward already running via ./port-forward.sh start
-# Or manual:
-kubectl port-forward svc/my-app-jp-preview 8081:5000 &
-
-# Test new version in browser or via curl
-curl http://localhost:8081/health
-# Verify logs, metrics, functionality...
-```
-
-#### 4️⃣ **Validate and Promote to Active**
-Once preview is verified stable:
-
-```bash
-# ✅ Option A: Using Argo Rollouts CLI (recommended)
-kubectl argo rollouts promote my-app-jp -n default
-
-# ✅ Option B: Using kubectl patch (no CLI needed)
-kubectl patch rollout my-app-jp -n default --type merge \
-  -p '{"status":{"promotionApproved":true}}'
-```
-
-**What happens after promotion:**
-- Active service (`my-app-jp`) switches to new version pods
-- Preview service (`my-app-jp-preview`) is decommissioned after 30s
-- Old pods gradually scale down
-
-#### 5️⃣ **Observe Traffic Switch**
-Monitor the transition:
-```bash
-# Watch new version take over
-kubectl argo rollouts get rollout my-app-jp -n default -w
-
-# Verify active service now points to new pods
-kubectl get pods -n default -l app=my-app-jp --show-labels
-
-# Check application is responsive on active endpoint
-curl http://localhost:8080/health
-```
-
-### ❌ **Rollback / Abort (If Issues Found)**
-
-```bash
-# ❌ Option A: Using CLI (immediate abort)
-kubectl argo rollouts abort my-app-jp -n default
-
-# ❌ Option B: Using kubectl patch
-kubectl patch rollout my-app-jp -n default --type merge \
-  -p '{"status":{"abortStatus":"true"}}'
-```
-
-**What happens after abort:**
-- Preview pods are immediately terminated
-- Active service remains on old version (zero downtime)
-- Pod cleanup respects `abortScaleDownDelaySeconds` (30s by default)
-
-### 📊 **Monitor via ArgoCD Dashboard**
-
-1. Open ArgoCD: https://localhost:8090
-2. Navigate to: **Applications → my-app → Resources**
-3. Look for **Rollout/my-app-jp** resource
-4. Click it to see:
-   - Blue-Green strategy details
-   - Current phase (Progressing, Paused, Succeeded, Failed)
-   - Active/Preview service mapping
-   - Pod replica counts
-   - Recent events
-
-### 🔍 **Diagnostic Commands**
-
-```bash
-# Show full Rollout spec + current status
-kubectl describe rollout my-app-jp -n default
-
-# Show just the Blue-Green state
-kubectl get rollout my-app-jp -n default -o jsonpath='{.status.blueGreen}'
-
-# Show recent events for Rollout
-kubectl get events -n default --field-selector involvedObject.name=my-app-jp --sort-by='.lastTimestamp' | head -20
-
-# Show why Rollout is stuck (if promoted=false)
-kubectl logs -n argo-rollouts -l app.kubernetes.io/name=argo-rollouts -f
-```
-
-### ✅ **Quick Reference Table**
-
-| Task | Command |
-|------|---------|
-| Watch rollout progress | `kubectl argo rollouts get rollout my-app-jp -n default -w` |
-| Promote to active | `kubectl argo rollouts promote my-app-jp -n default` |
-| Abort deployment | `kubectl argo rollouts abort my-app-jp -n default` |
-| Show full status | `kubectl describe rollout my-app-jp -n default` |
-| Monitor events | `kubectl get events -n default -w --field-selector involvedObject.name=my-app-jp` |
+* `setup.sh`
+* `cleanup.sh`
+* `port-forward.sh`
+* `clusterip-access.sh`
+* `bootstrap/` resources
 
 ---
 
-## 📊 Monitoring Stack
+## Security Highlights
 
-### Grafana
+### Declarative Configuration
 
-#### Get Grafana Admin Password
-```bash
-kubectl get secret kube-prometheus-stack-grafana -n monitoring -o jsonpath='{.data.admin-password}' | base64 -d
-```
+GitOps-managed manifests reduce manual drift and make platform state reviewable through pull requests and commits.
 
-#### Forward Grafana Port
-```bash
-kubectl port-forward svc/kube-prometheus-stack-grafana -n monitoring 3000:80 > /dev/null 2>&1 &
-```
-Access at: http://localhost:3000
+### Secret Handling
 
-### Prometheus
+For production deployments, application secrets are retrieved through AWS Secrets Manager and IAM Roles for Service Accounts (IRSA).
 
-#### Forward Prometheus Port
-```bash
-kubectl port-forward svc/kube-prometheus-stack-prometheus -n monitoring 9090:9090 > /dev/null 2>&1 &
-```
-Access at: http://localhost:9090
+Local environments use simplified bootstrap configurations to keep development workflows lightweight.
 
-#### Check Prometheus Label Values
-```bash
-kubectl get prometheus -n monitoring -o yaml | grep serviceMonitorSelector -A 5
-```
+### Environment Separation
 
-### Grafana Dashboards for ArgoCD
-- [Official Metrics Documentation](https://argo-cd.readthedocs.io/en/release-1.8/operator-manual/metrics/#dashboards)
-- [Dashboard JSON](https://github.com/argoproj/argo-cd/blob/master/examples/dashboard.json)
+Local and production-style settings are separated through values files such as `values.yaml` and `values-prod.yaml`.
 
 ---
 
-## 🛠️ Kubernetes Utils
+## GitOps Design
 
-### Check CPU and Memory Usage
-```bash
-k top pod
+This repository is the GitOps delivery layer for the platform.
+
+The platform uses the ArgoCD App-of-Apps pattern.
+
+A single root application manages platform services and application workloads, allowing environment-wide synchronization through a central entry point.
+
+Benefits include:
+
+* Simplified onboarding
+* Centralized application management
+* Consistent deployment structure
+* Easier environment promotion
+
+The GitOps layer manages:
+
+* ArgoCD
+* Argo Rollouts
+* Kube Prometheus Stack
+* Loki
+* Kubecost
+* Japanese Academy application workloads
+
+This separation keeps application delivery and platform operations under a consistent declarative workflow.
+
+---
+
+## Repository Structure
+
+```text
+.
+├── argocd/
+├── bootstrap/
+├── docs/
+├── gitops/
+├── cleanup.sh
+├── clusterip-access.sh
+├── port-forward.sh
+└── setup.sh
 ```
 
-kubectl exec 入去 etcd
+### Directory Description
 
-etcdctl snapshot save /tmp/snapshot.db
+| Directory | Purpose |
+| --------- | ------- |
+| `argocd/` | ArgoCD values and installation configuration |
+| `bootstrap/` | Cluster bootstrap manifests and repo secret helpers |
+| `docs/` | Architecture images and supporting documentation |
+| `gitops/` | App-of-apps root chart and workload charts |
+
+---
+
+## Related Repositories
+
+| Repository | Purpose | Link |
+| ---------- | ------- | ---- |
+| argocd-local | GitOps delivery platform and Kubernetes services | [github.com/yuemanwai/argocd-local](https://github.com/yuemanwai/argocd-local) |
+| japanese-academy | Flask web application | [github.com/yuemanwai/japanese-academy](https://github.com/yuemanwai/japanese-academy) |
+| terraform | AWS infrastructure provisioning layer | [github.com/yuemanwai/terraform](https://github.com/yuemanwai/terraform) |
+
+---
+
+## Technologies
+
+ArgoCD • Kubernetes • Helm • Argo Rollouts • Prometheus • Grafana • Loki • Kubecost • Flask • Terraform integration
+
+---
+
+## Notes
+
+This repository focuses on GitOps delivery and local Kubernetes platform operations.
+
+The architecture diagram is stored at `docs/images/gitops.png`.
+
+The application repository is the Flask-based Japanese Academy project, while Terraform lives in a separate infrastructure repository.
