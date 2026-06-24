@@ -94,10 +94,13 @@ Key objectives included:
 
 ### Bootstrap and Utilities
 
+#### For local
 * `setup.sh`
 * `cleanup.sh`
 * `port-forward.sh`
 * `clusterip-access.sh`
+
+#### For local and prod
 * `bootstrap/` resources
 
 ---
