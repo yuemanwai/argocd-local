@@ -46,6 +46,9 @@ The design follows GitOps principles where Git acts as the single source of trut
 * Production-style and local configuration split through Helm values
 * Helper scripts for setup, port-forwarding, and cleanup
 
+See the [Argo Rollouts workflow](docs/ROLLOUTS_WORKFLOW.md) for current preview,
+promotion, and abort commands.
+
 ---
 
 ## Design Goals
@@ -116,6 +119,8 @@ GitOps-managed manifests reduce manual drift and make platform state reviewable 
 For production deployments, application secrets are retrieved through AWS Secrets Manager and IAM Roles for Service Accounts (IRSA).
 
 Local environments use simplified bootstrap configurations to keep development workflows lightweight.
+
+Detailed local repository and application secret commands are documented in [Secret Management](docs/SECRET_MANAGEMENT.md).
 
 ### Environment Separation
 

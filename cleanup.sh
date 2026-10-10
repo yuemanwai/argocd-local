@@ -156,14 +156,30 @@ if [ -f "bootstrap/bootstrap.yaml" ]; then
 fi
 sleep 2
 
-# Remove any remaining ArgoCD Application finalizers if needed
-log_info "Cleaning up any remaining ArgoCD Application finalizers..."
-kubectl get applications --all-namespaces -o json 2>/dev/null | \
-    jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null | while read ns name; do
-        if [ ! -z "$ns" ] && [ ! -z "$name" ]; then
-            remove_finalizers "application" "$name" "$ns"
-        fi
-    done 2>/dev/null || true
+# Give ArgoCD time to honor Application finalizers and delete managed resources.
+log_info "Waiting for ArgoCD cascade deletion to finish..."
+application_delete_retries=30
+while [ "$application_delete_retries" -gt 0 ]; do
+    application_count=$(kubectl get applications --all-namespaces --no-headers 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$application_count" -eq 0 ]; then
+        log_success "ArgoCD applications and managed resources deleted"
+        break
+    fi
+
+    application_delete_retries=$((application_delete_retries - 1))
+    sleep 2
+done
+
+# Only remove Application finalizers after the bounded graceful wait.
+if [ "$application_delete_retries" -eq 0 ]; then
+    log_warning "Some ArgoCD Applications are still present; removing their finalizers as fallback..."
+    kubectl get applications --all-namespaces -o json 2>/dev/null | \
+        jq -r '.items[] | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null | while read ns name; do
+            if [ -n "$ns" ] && [ -n "$name" ]; then
+                remove_finalizers "application" "$name" "$ns"
+            fi
+        done 2>/dev/null || true
+fi
 
 sleep 2
 
@@ -223,6 +239,21 @@ kubectl get mutatingwebhookconfigurations -o name 2>/dev/null | grep -E 'keda|pr
 done 2>/dev/null || true
 
 sleep 2
+
+# Remove aggregated APIs backed by managed namespaces before deleting them. If
+# one of the backing services is already gone, stale discovery can keep the
+# namespace terminating.
+log_info "Deleting aggregated API services backed by managed namespaces..."
+for managed_namespace in argocd monitoring logging loki kubecost argo-rollouts keda; do
+    kubectl get apiservice -o json 2>/dev/null | \
+        jq -r --arg namespace "$managed_namespace" \
+            '.items[] | select(.spec.service.namespace == $namespace) | .metadata.name' 2>/dev/null | \
+        while read -r apiservice; do
+            if [ -n "$apiservice" ]; then
+                kubectl delete apiservice "$apiservice" --ignore-not-found 2>/dev/null || true
+            fi
+        done
+done
 
 # Delete managed namespaces - try graceful first, then force
 log_info "Deleting managed namespaces..."

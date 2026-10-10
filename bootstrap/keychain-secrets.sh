@@ -6,23 +6,31 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 usage() {
   cat <<EOF
-Usage:
-  ./bootstrap/keychain-secrets.sh save [github_account]      # save repo PAT + Gemini key
-  ./bootstrap/keychain-secrets.sh apply [github_account]     # apply repo secret + Gemini override
-  ./bootstrap/keychain-secrets.sh save-repo [github_account]
-  ./bootstrap/keychain-secrets.sh save-pat [github_account]
-  ./bootstrap/keychain-secrets.sh apply-repo [github_account]
-  ./bootstrap/keychain-secrets.sh apply-repo-secret [github_account]
-  ./bootstrap/keychain-secrets.sh save-gemini
-  ./bootstrap/keychain-secrets.sh apply-gemini
+Core actions:
+  save-repo [github_account]       Save GitHub PAT in macOS Keychain only.
+  apply-repo [github_account]      Copy GitHub PAT from Keychain to ArgoCD.
+  save-gemini                      Save Gemini API key in macOS Keychain only.
+  apply-gemini                     Apply Gemini key to the ArgoCD app.
+
+Combined actions:
+  save [github_account]             Run save-repo and save-gemini.
+  apply [github_account]            Run apply-repo and apply-gemini.
+
+Aliases:
+  save-pat                          Alias for save-repo.
+  apply-repo-secret                 Alias for apply-repo.
+
+Typical private-repository flow:
+  1. ./bootstrap/keychain-secrets.sh save-repo <github_username>
+  2. ./setup.sh --cluster orbstack
+  3. ./bootstrap/keychain-secrets.sh apply-repo <github_username>
+
+Typical Gemini flow (after the my-app ArgoCD Application exists):
+  1. ./bootstrap/keychain-secrets.sh save-gemini
+  2. ./bootstrap/keychain-secrets.sh apply-gemini
 
 Examples:
   ./bootstrap/keychain-secrets.sh save ymw
-  ./bootstrap/keychain-secrets.sh apply ymw
-  ./bootstrap/keychain-secrets.sh save-pat ymw
-  ./bootstrap/keychain-secrets.sh apply-repo-secret ymw
-  ./bootstrap/keychain-secrets.sh save-gemini
-  ./bootstrap/keychain-secrets.sh apply-gemini
 EOF
 }
 
@@ -132,6 +140,10 @@ apply_gemini_runtime_override() {
 }
 
 case "$ACTION" in
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
   save)
     echo "[1/2] Save GitHub PAT to Keychain"
     bash "$SAVE_REPO_SCRIPT" "$GITHUB_ACCOUNT"

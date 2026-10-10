@@ -53,11 +53,13 @@ has_existing_repo_secret() {
 git_creds_file_is_placeholder() {
     local creds_file=$1
 
-    if grep -Eq '^[[:space:]]*username:[[:space:]]*(<GITHUB_USERNAME>|CHANGE_ME|""|)$' "$creds_file"; then
+    if grep -Eq '^[[:space:]]*username:[[:space:]]*(<GITHUB_USERNAME>|CHANGE_ME|"")[[:space:]]*$' "$creds_file" || \
+        grep -Eq '^[[:space:]]*username:[[:space:]]*$' "$creds_file"; then
         return 0
     fi
 
-    if grep -Eq '^[[:space:]]*password:[[:space:]]*(<GITHUB_PAT>|CHANGE_ME|""|)$' "$creds_file"; then
+    if grep -Eq '^[[:space:]]*password:[[:space:]]*(<GITHUB_PAT>|CHANGE_ME|"")[[:space:]]*$' "$creds_file" || \
+        grep -Eq '^[[:space:]]*password:[[:space:]]*$' "$creds_file"; then
         return 0
     fi
 
