@@ -13,6 +13,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+ROLLOUTS_DASHBOARD_PORT=3100
 
 log_info() {
     echo -e "${BLUE}[INFO]${NC} $1"
@@ -89,10 +90,26 @@ watch_forward() {
     done
 }
 
+start_rollouts_dashboard() {
+    if ! command -v kubectl-argo-rollouts >/dev/null 2>&1; then
+        log_warn "Argo Rollouts plugin not found; skipping dashboard"
+        return 0
+    fi
+
+    if pgrep -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT" >/dev/null 2>&1; then
+        log_info "Argo Rollouts dashboard already running"
+        return 0
+    fi
+
+    kubectl argo rollouts dashboard --port "$ROLLOUTS_DASHBOARD_PORT" >/dev/null 2>&1 &
+    log_success "Argo Rollouts dashboard: http://localhost:$ROLLOUTS_DASHBOARD_PORT/rollouts"
+}
+
 show_status() {
     print_section "Port Forwards Status"
 
-    if ! pgrep -f "kubectl port-forward" >/dev/null 2>&1; then
+    if ! pgrep -f "kubectl port-forward" >/dev/null 2>&1 && \
+        ! pgrep -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT" >/dev/null 2>&1; then
         log_error "No port-forward processes running"
         echo ""
         return
@@ -112,6 +129,11 @@ show_status() {
         fi
     done
 
+    if pgrep -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT" >/dev/null 2>&1; then
+        dashboard_pid=$(pgrep -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT" | head -1)
+        printf "${GREEN}%-7s${NC} ${YELLOW}%-7s${NC} %-24s %s\n" "$dashboard_pid" "$ROLLOUTS_DASHBOARD_PORT" "argo-rollouts-dashboard" "local"
+    fi
+
     log_info "To stop one process: ${YELLOW}kill <PID>${NC}"
     log_info "To stop everything: ${YELLOW}./port-forward.sh stop${NC}"
     echo ""
@@ -127,7 +149,9 @@ print_access_info() {
     echo ""
     print_section "Access Info"
     echo -e "  ArgoCD:      ${YELLOW}https://localhost:8090${NC}"
+    echo -e "  Rollouts:    ${YELLOW}http://localhost:$ROLLOUTS_DASHBOARD_PORT/rollouts${NC}"
     echo -e "  Application: ${YELLOW}http://localhost:8080${NC}"
+    echo -e "  Preview:     ${YELLOW}http://localhost:8081${NC}"
     echo -e "  Grafana:     ${YELLOW}http://localhost:3000${NC}"
     echo -e "  Prometheus:  ${YELLOW}http://localhost:9090${NC}"
     echo -e "  Kubecost:    ${YELLOW}http://localhost:9091${NC}"
@@ -164,8 +188,8 @@ start_forwards() {
     
     # Application (my-app-jp)
     if kubectl get service my-app-jp -n default &>/dev/null; then
-        if ! pgrep -f "port-forward.sh watch my-app-jp default 8080 5000" >/dev/null 2>&1; then
-            start_watch_forward "my-app-jp" "default" "8080" "5000"
+        if ! pgrep -f "port-forward.sh watch my-app-jp default 8080 80" >/dev/null 2>&1; then
+            start_watch_forward "my-app-jp" "default" "8080" "80"
             log_success "Application (my-app-jp): http://localhost:8080"
         else
             log_info "Application (my-app-jp) auto-reconnect watcher already running"
@@ -174,8 +198,8 @@ start_forwards() {
     
     # Application Preview (my-app-jp-preview) - for Argo Rollouts Blue-Green testing
     if kubectl get service my-app-jp-preview -n default &>/dev/null; then
-        if ! pgrep -f "port-forward.sh watch my-app-jp-preview default 8081 5000" >/dev/null 2>&1; then
-            start_watch_forward "my-app-jp-preview" "default" "8081" "5000"
+        if ! pgrep -f "port-forward.sh watch my-app-jp-preview default 8081 80" >/dev/null 2>&1; then
+            start_watch_forward "my-app-jp-preview" "default" "8081" "80"
             log_success "Application Preview (my-app-jp-preview): http://localhost:8081"
         else
             log_info "Application Preview (my-app-jp-preview) auto-reconnect watcher already running"
@@ -194,8 +218,8 @@ start_forwards() {
             log_info "Grafana auto-reconnect watcher already running"
         fi
         
-        if ! pgrep -f "port-forward.sh watch kube-prometheus-stack-prometheus monitoring 9090 9090" >/dev/null 2>&1; then
-            start_watch_forward "kube-prometheus-stack-prometheus" "monitoring" "9090" "9090"
+        if ! pgrep -f "port-forward.sh watch kube-prometheus-stack-prometheus monitoring 9090 80" >/dev/null 2>&1; then
+            start_watch_forward "kube-prometheus-stack-prometheus" "monitoring" "9090" "80"
             log_success "Prometheus: http://localhost:9090"
         else
             log_info "Prometheus auto-reconnect watcher already running"
@@ -212,8 +236,8 @@ start_forwards() {
         fi
 
         if [ -n "$KUBECOST_SERVICE" ]; then
-            if ! pgrep -f "port-forward.sh watch $KUBECOST_SERVICE kubecost 9091 9090" >/dev/null 2>&1; then
-                start_watch_forward "$KUBECOST_SERVICE" "kubecost" "9091" "9090"
+            if ! pgrep -f "port-forward.sh watch $KUBECOST_SERVICE kubecost 9091 80" >/dev/null 2>&1; then
+                start_watch_forward "$KUBECOST_SERVICE" "kubecost" "9091" "80"
                 log_success "Kubecost: http://localhost:9091"
             else
                 log_info "Kubecost auto-reconnect watcher already running"
@@ -222,6 +246,8 @@ start_forwards() {
             log_info "Kubecost namespace found but service not ready yet"
         fi
     fi
+
+    start_rollouts_dashboard
     
     sleep 2
     echo ""
@@ -242,6 +268,11 @@ stop_forwards() {
         log_success "All port forwards stopped"
     else
         log_info "No port forwards running"
+    fi
+
+    if pgrep -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT" >/dev/null 2>&1; then
+        pkill -f "kubectl-argo-rollouts dashboard --port $ROLLOUTS_DASHBOARD_PORT"
+        log_success "Argo Rollouts dashboard stopped"
     fi
     echo ""
 }
