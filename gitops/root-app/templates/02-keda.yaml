@@ -36,5 +36,6 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - DisableClientSideApplyMigration=true
       - PruneLast=true
 {{- end }}
